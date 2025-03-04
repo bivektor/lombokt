@@ -14,6 +14,8 @@ It also supports data classes mainly for excluding specific properties or maybe 
 - JDK 17+
 - Kotlin JVM 2.1+ (K2 Compiler)
 
+Currently only K2 compiler is supported and there is no plan to support K1 but help is welcome if you think K1 should be supported too
+
 ## Installation
 
 Add the dependency to your `build.gradle.kts`:
