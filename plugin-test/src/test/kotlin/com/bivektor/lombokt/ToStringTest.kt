@@ -34,6 +34,40 @@ class ToStringTest {
     )
   }
 
+  @Test
+  fun doNotUseGetters() {
+    @ToString(doNotUseGetters = true)
+    class TestClass(val id: String = "id", private val createdBy: String = "user") {
+
+      private val createdDate: Long = 100
+
+      val name: String = "John"
+        get() = field.uppercase()
+
+      val age: Int get() = 10
+    }
+
+    assertEquals("TestClass(id=id, createdBy=user, createdDate=100, name=John, age=10)", TestClass().toString())
+  }
+
+  @Test
+  fun doNotUseGettersExplicitInclude() {
+    @ToString(doNotUseGetters = true, onlyExplicitlyIncluded = true)
+    class TestClass(val id: String = "id") {
+
+      private val createdDate: Long = 100
+
+      @ToString.Include
+      val name: String = "John"
+        get() = field.uppercase()
+
+      @ToString.Exclude
+      val age: Int get() = 10
+    }
+
+    assertEquals("TestClass(name=John)", TestClass().toString())
+  }
+
   @ToString
   private open class Person(
     open var name: String = "John",
