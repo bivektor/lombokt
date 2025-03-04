@@ -1,7 +1,5 @@
 # lombokt
 
-# Lombok for Kotlin
-
 A lightweight port of Project Lombok to Kotlin, providing useful annotations like `@ToString`, `@EqualsAndHashCode`, and more for reducing boilerplate in Kotlin projects.
 
 ## Features
