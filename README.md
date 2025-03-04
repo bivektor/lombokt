@@ -1,7 +1,8 @@
 # lombokt
 
 A lightweight port of Project Lombok to Kotlin, providing useful annotations like `@ToString`, `@EqualsAndHashCode`.
-Kotlin data classes already provide support for toString, equals and hashcode generation but for regular classes, one has to implement these methods manually. This plugin aims to reduce such boilerplate
+Kotlin data classes already provide support for toString, equals and hashcode generation but for regular classes, one has to implement these methods manually. This plugin aims to reduce such boilerplate.
+It also supports data classes mainly for excluding specific properties or maybe inclusion of additional properties especially for toString generation
 
 ## Features
 
