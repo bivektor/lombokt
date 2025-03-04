@@ -1,5 +1,8 @@
+import io.deepmedia.tools.deployer.DeployerExtension
+
 plugins {
   kotlin("jvm") apply false
+  id("io.deepmedia.tools.deployer") apply false
 }
 
 allprojects {
@@ -20,5 +23,54 @@ allprojects {
 
   the<JavaPluginExtension>().apply {
     withSourcesJar()
+  }
+}
+
+subprojects {
+  if (project.parent != rootProject || project.name.contains("test"))
+    return@subprojects
+
+  apply(plugin = "io.deepmedia.tools.deployer")
+
+  the<DeployerExtension>().apply {
+    projectInfo {
+      val scmUrl = "https://github.com/bivektor/lombokt"
+
+      url = scmUrl
+      scm {
+        connection = "scm:git:git://github.com/bivektor/${scmUrl}.git"
+        developerConnection = connection
+        url = scmUrl
+      }
+
+      license(apache2)
+      description = project.findProperty("description") as? String ?: project.name
+      developer {
+        name = "Bivektor Team"
+        email = "dev@bivektor.com"
+        organization = "Bivektor"
+      }
+    }
+
+    content {
+      component {
+        fromJava()
+        emptyDocs()
+      }
+    }
+
+    localSpec()
+
+    centralPortalSpec {
+      auth {
+        user.set(secret("centralPortal.user"))
+        password.set(secret("centralPortal.password"))
+      }
+
+      signing {
+        key.set(secret("signing.key"))
+        password.set(secret("signing.password"))
+      }
+    }
   }
 }

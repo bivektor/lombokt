@@ -8,15 +8,17 @@ dependencyResolutionManagement {
 pluginManagement {
   plugins {
     val kotlinVersion: String by settings
-
     kotlin("jvm") version kotlinVersion
+
+    val deployerPluginVersion: String by settings
+    id("io.deepmedia.tools.deployer") version deployerPluginVersion
   }
 }
 
 rootProject.name = "lombokt"
-include("plugin:k2")
-include("plugin:cli")
-include("plugin:common")
 include("lombokt-api")
+include("lombokt-plugin:k2")
+include("lombokt-plugin:cli")
+include("lombokt-plugin:common")
+
 include("plugin-test")
-project(":plugin").name = "lombokt-plugin"

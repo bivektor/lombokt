@@ -36,6 +36,7 @@ tasks {
   }
 
   sourcesJar {
+    archiveClassifier.set("sources")
     dependsOn(subprojects.map { it.tasks.named("sourcesJar") })
     subprojects.forEach { subproject ->
       from(subproject.sourceSets.main.get().allSource)
