@@ -1,6 +1,7 @@
 # lombokt
 
-A lightweight port of Project Lombok to Kotlin, providing useful annotations like `@ToString`, `@EqualsAndHashCode`, and more for reducing boilerplate in Kotlin projects.
+A lightweight port of Project Lombok to Kotlin, providing useful annotations like `@ToString`, `@EqualsAndHashCode`.
+Kotlin data classes already provide support for toString, equals and hashcode generation but for regular classes, one has to implement these methods manually. This plugin aims to reduce such boilerplate
 
 ## Features
 
