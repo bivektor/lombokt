@@ -23,11 +23,9 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.IrBlockBody
-import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.findAnnotation
-import org.jetbrains.kotlin.ir.util.getValueArgument
 import org.jetbrains.kotlin.ir.util.isPropertyField
 import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
@@ -62,7 +60,7 @@ class ToStringIrVisitor(
   @OptIn(UnsafeDuringIrConstructionAPI::class)
   private fun generateMethodBody(
     fn: IrSimpleFunction,
-    annotation: AnnotationAttrs
+    annotation: AnnotationConfig
   ): IrBlockBody {
     val parentClass = fn.parentAsClass
     return DeclarationIrBuilder(pluginContext, fn.symbol).irBlockBody(fn) {
@@ -85,11 +83,17 @@ class ToStringIrVisitor(
 
       var hasIncludedField = false
       parentClass.acceptChildrenVoid(object : IrVisitorVoid() {
+
         override fun visitProperty(declaration: IrProperty) {
           if (declaration.origin != IrDeclarationOrigin.DEFINED) return
           val getter = declaration.getter ?: return
-          val mode = getIncludeMode(declaration.annotations) ?: getIncludeMode(getter.annotations)
-          if (!isIncludedMode(annotation, mode)) return
+          val config = getPropertyConfig(declaration)
+          if (!config.isIncluded(annotation)) return
+
+          if (annotation.doNotUseGetters && declaration.backingField != null) {
+            handleField(declaration.backingField!!)
+            return
+          }
 
           hasIncludedField = true
           result.arguments.add(irString(declaration.name.asString() + "="))
@@ -101,10 +105,13 @@ class ToStringIrVisitor(
         }
 
         override fun visitField(declaration: IrField) {
+          // Property fields are handled by visitProperty
           if (declaration.isPropertyField) return
-          val mode = getIncludeMode(declaration.annotations)
-          if (!isIncludedMode(annotation, mode)) return
+          if (!getElementConfig(declaration.annotations).isIncluded(annotation)) return
+          handleField(declaration)
+        }
 
+        private fun handleField(declaration: IrField) {
           hasIncludedField = true
           result.arguments.add(irString(declaration.name.asString() + "="))
           result.arguments.add(irGetField(thisRef, declaration))
@@ -121,43 +128,50 @@ class ToStringIrVisitor(
     }
   }
 
-  private fun getAnnotationAttributes(klass: IrClass): AnnotationAttrs {
+  private fun getPropertyConfig(
+    declaration: IrProperty
+  ): ElementConfig? = getElementConfig(declaration.annotations) ?: getElementConfig(declaration.getter!!.annotations)
+
+  private fun getAnnotationAttributes(klass: IrClass): AnnotationConfig {
     val annotation = klass.annotations.findAnnotation(LomboktNames.TO_STRING_ANNOTATION_NAME)
     require(annotation != null) { "Class ${klass.name} is not annotated with @" + LomboktNames.TO_STRING_ANNOTATION_NAME }
-    return parseAnnotationAttributes(annotation)
+    return parseToStringAnnotation(annotation)
   }
 
-  private fun getIncludeMode(annotations: List<IrConstructorCall>): IncludeMode? {
-    if (annotations.findAnnotation(EXCLUDE_ANNOTATION_NAME) != null) return IncludeMode.EXCLUDE
-    if (annotations.findAnnotation(INCLUDE_ANNOTATION_NAME) != null) return IncludeMode.INCLUDE
+  private fun getElementConfig(annotations: List<IrConstructorCall>): ElementConfig? {
+    if (annotations.findAnnotation(EXCLUDE_ANNOTATION_NAME) != null) return ElementConfig.ExcludeDefault
+    if (annotations.findAnnotation(INCLUDE_ANNOTATION_NAME) != null) return ElementConfig.IncludeDefault
     return null
   }
 
-  private fun isIncludedMode(annotation: AnnotationAttrs, mode: IncludeMode?): Boolean {
-    return if (annotation.onlyExplicitlyIncluded)
-      mode == IncludeMode.INCLUDE
-    else mode != IncludeMode.EXCLUDE
-  }
-
-  private fun parseAnnotationAttributes(annotation: IrConstructorCall): AnnotationAttrs {
-    val onlyExplicitlyIncluded =
-      (annotation.getValueArgument(Name.identifier("onlyExplicitlyIncluded")) as? IrConst)?.value as? Boolean == true
-
-    val callSuper = (annotation.getValueArgument(Name.identifier("callSuper")) as? IrConst)?.value as? Boolean == true
-
-    return AnnotationAttrs(
-      onlyExplicitlyIncluded = onlyExplicitlyIncluded,
-      callSuper = callSuper
+  private fun parseToStringAnnotation(annotation: IrConstructorCall): AnnotationConfig {
+    return AnnotationConfig(
+      onlyExplicitlyIncluded = annotation.getConstValueByName("onlyExplicitlyIncluded", false),
+      callSuper = annotation.getConstValueByName("callSuper", false),
+      doNotUseGetters = annotation.getConstValueByName("doNotUseGetters", false),
     )
   }
 
-  private data class AnnotationAttrs(
+  private data class AnnotationConfig(
     val onlyExplicitlyIncluded: Boolean,
-    val callSuper: Boolean
+    val callSuper: Boolean,
+    val doNotUseGetters: Boolean,
   )
 
-  private enum class IncludeMode {
-    INCLUDE, EXCLUDE
+  private data class ElementConfig(
+    val includeOption: Boolean? = null
+  ) {
+
+    companion object {
+      val IncludeDefault = ElementConfig(includeOption = true)
+      val ExcludeDefault = ElementConfig(includeOption = false)
+    }
+  }
+
+  private fun ElementConfig?.isIncluded(annotation: AnnotationConfig): Boolean {
+    return if (annotation.onlyExplicitlyIncluded)
+      this?.includeOption == true
+    else this == null || this.includeOption == null
   }
 }
 
