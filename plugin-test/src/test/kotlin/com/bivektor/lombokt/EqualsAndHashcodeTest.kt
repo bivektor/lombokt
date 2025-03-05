@@ -21,7 +21,6 @@ class EqualsAndHashcodeTest {
     fun `test basic equals and hashCode with primary constructor properties`() {
 
       @EqualsAndHashCode
-      @ToString(callSuper = true)
       class Person(val name: String, val age: Int)
 
       val person1 = Person("John", 30)
@@ -520,5 +519,23 @@ class EqualsAndHashcodeTest {
       assertNotEquals(person1, person3)
       assertNotEquals(person1.hashCode(), person3.hashCode())
     }
+  }
+
+  @Test
+  fun `should skip if equals and hashcode already declared`() {
+    @EqualsAndHashCode
+    class Person(val name: String) {
+
+      override fun equals(other: Any?): Boolean {
+        return (other as Person?)?.name == "John"
+      }
+
+      override fun hashCode(): Int {
+        return 99
+      }
+    }
+
+    assertEquals(Person("Jane"), Person("John"))
+    assertEquals(99, Person("Jane").hashCode())
   }
 }

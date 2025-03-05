@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.types.isNullableAny
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
@@ -73,7 +74,10 @@ class EqualsAndHashCodeIrVisitor(
       val otherParamRef = irGet(otherParam)
 
       if (annotation.callSuper) {
-        val superFn = fn.overriddenSymbols.single().owner
+        val superFn = resolveSuperFunction(fn) {
+          it.name == EQUALS_METHOD_NAME && it.valueParameters.size == 1 && it.valueParameters[0].type.isNullableAny()
+        }
+
         +irIfThen(
           condition = irNot(irCall(superFn.symbol).apply {
             dispatchReceiver = thisRef
@@ -131,7 +135,10 @@ class EqualsAndHashCodeIrVisitor(
 
       // Start with a prime number for better distribution
       val initialValue: IrExpression = if (annotation.callSuper) {
-        val superFn = fn.overriddenSymbols.single().owner
+        val superFn = resolveSuperFunction(fn) {
+          it.name == HASHCODE_METHOD_NAME && it.valueParameters.isEmpty()
+        }
+
         irCall(superFn.symbol).apply {
           dispatchReceiver = thisRef
           superQualifierSymbol = superFn.parentAsClass.symbol
@@ -171,6 +178,13 @@ class EqualsAndHashCodeIrVisitor(
       // Return the computed result
       +irReturn(irGet(resultVar))
     }
+  }
+
+  @OptIn(UnsafeDuringIrConstructionAPI::class)
+  private fun resolveSuperFunction(fn: IrSimpleFunction, predicate: (IrSimpleFunction) -> Boolean): IrSimpleFunction {
+    return (fn.parentAsClass.superClass ?: pluginContext.irBuiltIns.anyClass.owner)
+      .functions
+      .single(predicate)
   }
 
   private fun getAnnotationAttributes(klass: IrClass): AnnotationAttrs {

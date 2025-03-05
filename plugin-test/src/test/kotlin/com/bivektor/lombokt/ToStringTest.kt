@@ -2,7 +2,9 @@ package com.bivektor.lombokt
 
 import lombokt.ToString
 import org.junit.jupiter.api.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 @Suppress("unused")
 class ToStringTest {
@@ -20,10 +22,19 @@ class ToStringTest {
     @ToString(callSuper = true)
     class Subject(val extra: String = "extra") : Person()
 
-    assertEquals(
-      "Subject(super=${Person()}, extra=extra)",
-      Subject().toString()
-    )
+    @ToString(callSuper = false)
+    class Subject2(val extra: String = "extra") : Person()
+
+    @ToString(callSuper = true)
+    class Subject4(val extra: String = "extra")
+
+
+    assertEquals("Subject(super=${Person()}, extra=extra)", Subject().toString())
+    assertEquals("Subject2(extra=extra)", Subject2().toString())
+
+    val subject4String = Subject4().toString()
+    assertNotEquals("Subject4(extra=extra)", subject4String)
+    assertContains(subject4String, "super=com.bivektor.lombokt.ToStringTest\$callSuper")
   }
 
   @Test
@@ -74,19 +85,34 @@ class ToStringTest {
     @ToString
     class IncludeNames(
       @ToString.Include(name = "namex") var name: String = "John",
-      @ToString.Include(name="agex") private val age: Int = 10,
+      @ToString.Include(name = "agex") private val age: Int = 10,
     ) {
-      @ToString.Include(name="surnamex")
+      @ToString.Include(name = "surnamex")
       var surname: String? = "Doe"
 
-      @ToString.Include(name="emailx")
+      @ToString.Include(name = "emailx")
       private val email: String? = null
 
-      @ToString.Include(name="computedx")
+      @ToString.Include(name = "computedx")
       val computed: String get() = "computed"
     }
 
-    assertEquals("IncludeNames(namex=John, agex=10, surnamex=Doe, emailx=null, computedx=computed)", IncludeNames().toString())
+    assertEquals(
+      "IncludeNames(namex=John, agex=10, surnamex=Doe, emailx=null, computedx=computed)",
+      IncludeNames().toString()
+    )
+  }
+
+  @Test
+  fun shouldSkipIfToStringAlreadyDeclared() {
+    @ToString
+    class John(var name: String = "John") {
+      override fun toString(): String {
+        return "Jane"
+      }
+    }
+
+    assertEquals("Jane", John().toString())
   }
 
   @ToString
