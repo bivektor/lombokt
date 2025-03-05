@@ -47,11 +47,12 @@ import lombokt.ToString
 
 @ToString
 data class User(val username: String, @ToString.Exclude val password: Int) {
+  @ToString.Include(name="emailAddress")
   var email: String? = null
 }
 
 @ToString(onlyExplicitlyIncluded=true)
-class Person(@ToString.Include val name: String, @ToString.Include private val surname: String) {
+class Person(@ToString.Include val name: String, @ToString.Include(name="custom") private val surname: String) {
   
   @ToString.Include
   val fullName: String get() = "$name $surname"
