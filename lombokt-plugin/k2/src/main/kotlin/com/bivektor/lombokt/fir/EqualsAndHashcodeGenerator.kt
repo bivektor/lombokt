@@ -51,7 +51,8 @@ open class EqualsAndHashcodeGenerator(
     if (!classSymbol.isClass) {
       messageCollector.report(
         CompilerMessageSeverity.WARNING,
-        "Invalid usage of EqualsAndHashCode on ${classSymbol.classId} which is not a class")
+        "Invalid usage of EqualsAndHashCode on ${classSymbol.classId} which is not a class"
+      )
       return true
     }
 

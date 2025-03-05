@@ -175,7 +175,10 @@ class ToStringIrVisitor(
     }
   }
 
-  private fun ElementConfig?.isIncluded(annotation: AnnotationConfig, requireExplicitInclude: Boolean = false): Boolean {
+  private fun ElementConfig?.isIncluded(
+    annotation: AnnotationConfig,
+    requireExplicitInclude: Boolean = false
+  ): Boolean {
     return if (annotation.onlyExplicitlyIncluded || requireExplicitInclude)
       this?.includeOption == true
     else this?.includeOption != false
