@@ -10,7 +10,7 @@ annotation class ToString(
 
   @Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
   @Retention(AnnotationRetention.SOURCE)
-  annotation class Include()
+  annotation class Include(val name: String = "")
 
   @Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
   @Retention(AnnotationRetention.SOURCE)

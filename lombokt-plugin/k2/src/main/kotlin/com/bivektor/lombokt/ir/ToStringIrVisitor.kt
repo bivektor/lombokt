@@ -91,12 +91,13 @@ class ToStringIrVisitor(
           if (!config.isIncluded(annotation)) return
 
           if (annotation.doNotUseGetters && declaration.backingField != null) {
-            handleField(declaration.backingField!!)
+            handleField(declaration.backingField!!, config)
             return
           }
 
           hasIncludedField = true
-          result.arguments.add(irString(declaration.name.asString() + "="))
+          val outputName = config?.customName ?: declaration.name.asString()
+          result.arguments.add(irString("$outputName="))
           result.arguments.add(irCall(getter.symbol).apply {
             dispatchReceiver = thisRef
           })
@@ -107,13 +108,15 @@ class ToStringIrVisitor(
         override fun visitField(declaration: IrField) {
           // Property fields are handled by visitProperty
           if (declaration.isPropertyField) return
-          if (!getElementConfig(declaration.annotations).isIncluded(annotation)) return
-          handleField(declaration)
+          val config = getElementConfig(declaration.annotations)
+          if (!config.isIncluded(annotation)) return
+          handleField(declaration, config)
         }
 
-        private fun handleField(declaration: IrField) {
+        private fun handleField(declaration: IrField, config: ElementConfig?) {
           hasIncludedField = true
-          result.arguments.add(irString(declaration.name.asString() + "="))
+          val outputName = config?.customName ?: declaration.name.asString()
+          result.arguments.add(irString("$outputName="))
           result.arguments.add(irGetField(thisRef, declaration))
           result.arguments.add(irString(", "))
         }
@@ -128,20 +131,10 @@ class ToStringIrVisitor(
     }
   }
 
-  private fun getPropertyConfig(
-    declaration: IrProperty
-  ): ElementConfig? = getElementConfig(declaration.annotations) ?: getElementConfig(declaration.getter!!.annotations)
-
   private fun getAnnotationAttributes(klass: IrClass): AnnotationConfig {
     val annotation = klass.annotations.findAnnotation(LomboktNames.TO_STRING_ANNOTATION_NAME)
     require(annotation != null) { "Class ${klass.name} is not annotated with @" + LomboktNames.TO_STRING_ANNOTATION_NAME }
     return parseToStringAnnotation(annotation)
-  }
-
-  private fun getElementConfig(annotations: List<IrConstructorCall>): ElementConfig? {
-    if (annotations.findAnnotation(EXCLUDE_ANNOTATION_NAME) != null) return ElementConfig.ExcludeDefault
-    if (annotations.findAnnotation(INCLUDE_ANNOTATION_NAME) != null) return ElementConfig.IncludeDefault
-    return null
   }
 
   private fun parseToStringAnnotation(annotation: IrConstructorCall): AnnotationConfig {
@@ -152,6 +145,18 @@ class ToStringIrVisitor(
     )
   }
 
+  private fun getPropertyConfig(
+    declaration: IrProperty
+  ): ElementConfig? = getElementConfig(declaration.annotations) ?: getElementConfig(declaration.getter!!.annotations)
+
+  private fun getElementConfig(annotations: List<IrConstructorCall>): ElementConfig? {
+    if (annotations.findAnnotation(EXCLUDE_ANNOTATION_NAME) != null) return ElementConfig.ExcludeDefault
+    val includeAnnotation = annotations.findAnnotation(INCLUDE_ANNOTATION_NAME) ?: return null
+    val customName = includeAnnotation.getConstValueByName("name", "")
+    if (customName.isBlank()) return ElementConfig.IncludeDefault
+    return ElementConfig(includeOption = true, customName = customName)
+  }
+
   private data class AnnotationConfig(
     val onlyExplicitlyIncluded: Boolean,
     val callSuper: Boolean,
@@ -159,9 +164,9 @@ class ToStringIrVisitor(
   )
 
   private data class ElementConfig(
-    val includeOption: Boolean? = null
+    val includeOption: Boolean? = null,
+    val customName: String? = null,
   ) {
-
     companion object {
       val IncludeDefault = ElementConfig(includeOption = true)
       val ExcludeDefault = ElementConfig(includeOption = false)
@@ -171,7 +176,7 @@ class ToStringIrVisitor(
   private fun ElementConfig?.isIncluded(annotation: AnnotationConfig): Boolean {
     return if (annotation.onlyExplicitlyIncluded)
       this?.includeOption == true
-    else this == null || this.includeOption == null
+    else this?.includeOption != false
   }
 }
 

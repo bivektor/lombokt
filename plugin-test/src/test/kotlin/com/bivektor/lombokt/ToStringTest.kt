@@ -68,6 +68,26 @@ class ToStringTest {
     assertEquals("TestClass(name=John)", TestClass().toString())
   }
 
+  @Test
+  fun customIncludeName() {
+    @ToString
+    class IncludeNames(
+      @ToString.Include(name = "namex") var name: String = "John",
+      @ToString.Include(name="agex") private val age: Int = 10,
+    ) {
+      @ToString.Include(name="surnamex")
+      var surname: String? = "Doe"
+
+      @ToString.Include(name="emailx")
+      private val email: String? = null
+
+      @ToString.Include(name="computedx")
+      val computed: String get() = "computed"
+    }
+
+    assertEquals("IncludeNames(namex=John, agex=10, surnamex=Doe, emailx=null, computedx=computed)", IncludeNames().toString())
+  }
+
   @ToString
   private open class Person(
     open var name: String = "John",
