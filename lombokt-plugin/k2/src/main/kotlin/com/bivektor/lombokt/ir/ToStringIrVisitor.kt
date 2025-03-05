@@ -87,10 +87,12 @@ class ToStringIrVisitor(
         override fun visitProperty(declaration: IrProperty) {
           if (declaration.origin != IrDeclarationOrigin.DEFINED) return
           val getter = declaration.getter ?: return
-          val config = getPropertyConfig(declaration)
-          if (!config.isIncluded(annotation)) return
+          val hasBackingField = declaration.backingField != null
 
-          if (annotation.doNotUseGetters && declaration.backingField != null) {
+          val config = getPropertyConfig(declaration)
+          if (!config.isIncluded(annotation, !hasBackingField)) return
+
+          if (annotation.doNotUseGetters && hasBackingField) {
             handleField(declaration.backingField!!, config)
             return
           }
@@ -173,8 +175,8 @@ class ToStringIrVisitor(
     }
   }
 
-  private fun ElementConfig?.isIncluded(annotation: AnnotationConfig): Boolean {
-    return if (annotation.onlyExplicitlyIncluded)
+  private fun ElementConfig?.isIncluded(annotation: AnnotationConfig, requireExplicitInclude: Boolean = false): Boolean {
+    return if (annotation.onlyExplicitlyIncluded || requireExplicitInclude)
       this?.includeOption == true
     else this?.includeOption != false
   }

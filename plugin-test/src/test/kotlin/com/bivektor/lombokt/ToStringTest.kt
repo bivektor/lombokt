@@ -44,6 +44,7 @@ class ToStringTest {
       val name: String = "John"
         get() = field.uppercase()
 
+      @ToString.Include
       val age: Int get() = 10
     }
 
@@ -101,7 +102,10 @@ class ToStringTest {
     @ToString.Exclude
     private val address3: String = "excluded"
 
+    @ToString.Include
     val fullName: String get() = "$name $surname"
+
+    val computed: String get() = "computed"
   }
 
   @ToString(onlyExplicitlyIncluded = true)
@@ -116,5 +120,7 @@ class ToStringTest {
 
     @ToString.Include
     val fullName: String get() = "$name $surname"
+
+    val computed: String get() = "computed"
   }
 }
