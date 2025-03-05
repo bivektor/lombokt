@@ -1,33 +1,23 @@
 package com.bivektor.lombokt.ir
 
 import com.bivektor.lombokt.LomboktNames
+import com.bivektor.lombokt.LomboktNames.TO_STRING_ANNOTATION_NAME
+import com.bivektor.lombokt.LomboktNames.TO_STRING_METHOD_NAME
 import com.bivektor.lombokt.PluginKeys
 import com.bivektor.lombokt.isGeneratedByPluginKey
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
 import org.jetbrains.kotlin.backend.common.lower.irBlockBody
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.builders.irCall
-import org.jetbrains.kotlin.ir.builders.irConcat
-import org.jetbrains.kotlin.ir.builders.irGet
-import org.jetbrains.kotlin.ir.builders.irGetField
-import org.jetbrains.kotlin.ir.builders.irReturn
-import org.jetbrains.kotlin.ir.builders.irString
-import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrDeclaration
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
-import org.jetbrains.kotlin.ir.declarations.IrField
-import org.jetbrains.kotlin.ir.declarations.IrFile
-import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.ir.declarations.IrProperty
-import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.backend.js.lower.originalFqName
+import org.jetbrains.kotlin.ir.builders.*
+import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.IrBlockBody
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.util.findAnnotation
-import org.jetbrains.kotlin.ir.util.isPropertyField
-import org.jetbrains.kotlin.ir.util.parentAsClass
+import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.name.Name
@@ -69,8 +59,7 @@ class ToStringIrVisitor(
       result.arguments.add(irString(parentClass.name.asString() + "("))
 
       if (annotation.callSuper) {
-        val superFn = fn.overriddenSymbols.single().owner
-
+        val superFn = resolveSuperFunction(fn)
         result.arguments.add(irString("super="))
         result.arguments.add(
           irCall(superFn.symbol).apply {
@@ -133,9 +122,27 @@ class ToStringIrVisitor(
     }
   }
 
+  @OptIn(UnsafeDuringIrConstructionAPI::class)
+  private fun resolveSuperFunction(fn: IrSimpleFunction): IrSimpleFunction {
+    val parentClass = fn.parentAsClass
+    if (parentClass.superClass == null)
+      messageCollector.report(
+        CompilerMessageSeverity.WARNING,
+        "ToString on ${parentClass.kotlinFqName} requires super call but the class has no super class"
+      )
+
+    return (parentClass.superClass ?: pluginContext.irBuiltIns.anyClass.owner)
+      .functions
+      .singleOrNull {
+        it.name == TO_STRING_METHOD_NAME && it.valueParameters.isEmpty()
+      }!!
+  }
+
   private fun getAnnotationAttributes(klass: IrClass): AnnotationConfig {
-    val annotation = klass.annotations.findAnnotation(LomboktNames.TO_STRING_ANNOTATION_NAME)
-    require(annotation != null) { "Class ${klass.name} is not annotated with @" + LomboktNames.TO_STRING_ANNOTATION_NAME }
+    val annotation = requireNotNull(klass.annotations.findAnnotation(TO_STRING_ANNOTATION_NAME)) {
+      "Class ${klass.kotlinFqName} is not annotated with @" + TO_STRING_ANNOTATION_NAME
+    }
+
     return parseToStringAnnotation(annotation)
   }
 
@@ -185,5 +192,5 @@ class ToStringIrVisitor(
   }
 }
 
-private val INCLUDE_ANNOTATION_NAME = LomboktNames.TO_STRING_ANNOTATION_NAME.child(Name.identifier("Include"))
-private val EXCLUDE_ANNOTATION_NAME = LomboktNames.TO_STRING_ANNOTATION_NAME.child(Name.identifier("Exclude"))
+private val INCLUDE_ANNOTATION_NAME = TO_STRING_ANNOTATION_NAME.child(Name.identifier("Include"))
+private val EXCLUDE_ANNOTATION_NAME = TO_STRING_ANNOTATION_NAME.child(Name.identifier("Exclude"))
