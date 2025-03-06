@@ -1,10 +1,9 @@
-package com.bivektor.lombokt.ir
+package com.bivektor.lombokt
 
-import com.bivektor.lombokt.LomboktNames
 import com.bivektor.lombokt.LomboktNames.EQUALS_METHOD_NAME
 import com.bivektor.lombokt.LomboktNames.HASHCODE_METHOD_NAME
 import com.bivektor.lombokt.PluginKeys.EqualsHashCodeKey
-import com.bivektor.lombokt.isGeneratedByPluginKey
+import getConstValueByName
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
 import org.jetbrains.kotlin.backend.common.lower.irBlockBody
@@ -243,10 +242,8 @@ class EqualsAndHashCodeIrVisitor(
   }
 
   private fun parseAnnotationAttributes(annotation: IrConstructorCall): AnnotationAttrs {
-    val onlyExplicitlyIncluded =
-      (annotation.getValueArgument(Name.identifier("onlyExplicitlyIncluded")) as? IrConst)?.value as? Boolean == true
-
-    val callSuper = (annotation.getValueArgument(Name.identifier("callSuper")) as? IrConst)?.value as? Boolean == true
+    val onlyExplicitlyIncluded = annotation.getConstValueByName("onlyExplicitlyIncluded", false)
+    val callSuper = annotation.getConstValueByName("callSuper", false)
 
     return AnnotationAttrs(
       onlyExplicitlyIncluded = onlyExplicitlyIncluded,

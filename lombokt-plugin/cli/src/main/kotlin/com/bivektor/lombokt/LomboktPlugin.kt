@@ -1,7 +1,6 @@
 package com.bivektor.lombokt
 
 import com.bivektor.lombokt.fir.LombokktFirExtensionRegistrar
-import com.bivektor.lombokt.ir.LomboktIrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar

@@ -1,4 +1,3 @@
-package com.bivektor.lombokt.ir
 
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall

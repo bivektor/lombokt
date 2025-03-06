@@ -1,17 +1,14 @@
-package com.bivektor.lombokt.ir
+package com.bivektor.lombokt
 
-import com.bivektor.lombokt.LomboktNames
 import com.bivektor.lombokt.LomboktNames.TO_STRING_ANNOTATION_NAME
 import com.bivektor.lombokt.LomboktNames.TO_STRING_METHOD_NAME
-import com.bivektor.lombokt.PluginKeys
-import com.bivektor.lombokt.isGeneratedByPluginKey
+import getConstValueByName
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
 import org.jetbrains.kotlin.backend.common.lower.irBlockBody
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.backend.js.lower.originalFqName
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.IrBlockBody
@@ -55,7 +52,7 @@ class ToStringIrVisitor(
     val parentClass = fn.parentAsClass
     return DeclarationIrBuilder(pluginContext, fn.symbol).irBlockBody(fn) {
       val thisRef = irGet(fn.dispatchReceiverParameter!!)
-      var result = irConcat()
+      val result = irConcat()
       result.arguments.add(irString(parentClass.name.asString() + "("))
 
       if (annotation.callSuper) {

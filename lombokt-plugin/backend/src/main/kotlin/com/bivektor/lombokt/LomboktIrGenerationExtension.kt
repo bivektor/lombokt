@@ -1,4 +1,4 @@
-package com.bivektor.lombokt.ir
+package com.bivektor.lombokt
 
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
