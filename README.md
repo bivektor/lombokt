@@ -11,10 +11,9 @@ It also supports data classes mainly for excluding specific properties or maybe 
 
 ## Requirements
 
-- JDK 17+
 - Kotlin JVM 2.1+ (K2 Compiler)
 
-Currently only K2 compiler is supported and there is no plan to support K1 but help is welcome if you think K1 should be supported too
+Currently only JVM platform is supported through K2 compiler and there is no plan to support K1.
 
 ## Installation
 
