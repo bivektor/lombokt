@@ -1,13 +1,13 @@
 # lombokt
 
-A lightweight port of Project Lombok to Kotlin, providing useful annotations like `@ToString`, `@EqualsAndHashCode`.
+A lightweight port of [Project Lombok](https://projectlombok.org/) to Kotlin, providing useful annotations like `@ToString`, `@EqualsAndHashCode`.
 Kotlin data classes already provide support for toString, equals and hashcode generation but for regular classes, one has to implement these methods manually. This plugin aims to reduce such boilerplate.
 It also supports data classes mainly for excluding specific properties or maybe inclusion of additional properties especially for toString generation
 
 ## Features
 
-- `@ToString` – Generates a `toString()` method automatically. 
-- `@EqualsAndHashCode` – Generates `equals()` and `hashCode()` methods. 
+- `@ToString` – Generates a `toString()` method automatically.
+- `@EqualsAndHashCode` – Generates `equals()` and `hashCode()` methods.
 
 ## Requirements
 
@@ -53,7 +53,7 @@ data class User(val username: String, @ToString.Exclude val password: Int) {
 
 @ToString(onlyExplicitlyIncluded=true)
 class Person(@ToString.Include val name: String, @ToString.Include(name="custom") private val surname: String) {
-  
+
   @ToString.Include
   val fullName: String get() = "$name $surname"
 }
@@ -65,7 +65,7 @@ class Person(@ToString.Include val name: String, @ToString.Include(name="custom"
 
 Works for both regular classes and data classes.
 
-Only fields and properties with backing fields are included. 
+Only fields and properties with backing fields are included.
 Access is always by fields, thus property getters are not used.
 
 ```kotlin
@@ -75,7 +75,7 @@ import lombokt.EqualsAndHashCode
 data class Order(
   val orderId: String,
   val items: List<Item>,
-  
+
   @EqualsAndHashCode.Exclude
   val createdBy: String
 )
