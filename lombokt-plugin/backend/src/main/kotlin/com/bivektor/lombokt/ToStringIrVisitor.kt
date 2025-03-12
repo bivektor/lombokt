@@ -44,7 +44,6 @@ class ToStringIrVisitor(
     declaration.body = generateMethodBody(declaration, annotation)
   }
 
-  @OptIn(UnsafeDuringIrConstructionAPI::class)
   private fun generateMethodBody(
     fn: IrSimpleFunction,
     annotation: AnnotationConfig

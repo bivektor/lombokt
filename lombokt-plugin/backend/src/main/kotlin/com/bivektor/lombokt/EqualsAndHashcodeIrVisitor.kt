@@ -56,7 +56,6 @@ class EqualsAndHashCodeIrVisitor(
     }
   }
 
-  @OptIn(UnsafeDuringIrConstructionAPI::class)
   private fun generateEqualsMethodBody(
     fields: List<IrField>,
     fn: IrSimpleFunction,

@@ -1,11 +1,11 @@
 package com.bivektor.lombokt
 
 import lombokt.EqualsAndHashCode
-import lombokt.ToString
 import org.junit.jupiter.api.Nested
-import java.util.Objects
+import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 
 @Suppress("unused")
@@ -235,7 +235,9 @@ class EqualsAndHashcodeTest {
         private var _name: String = ""
         var name: String
           get() = TODO()
-          set(value) { _name = value }
+          set(value) {
+            _name = value
+          }
       }
 
       val person1 = Person()
@@ -462,6 +464,7 @@ class EqualsAndHashcodeTest {
 
   @Nested
   inner class DataClassTests {
+
     @Test
     fun `default settings`() {
 
@@ -538,4 +541,13 @@ class EqualsAndHashcodeTest {
     assertEquals(Person("Jane"), Person("John"))
     assertEquals(99, Person("Jane").hashCode())
   }
+
+  @Test
+  fun objectsNotSupported() {
+    assertFalse { TestObject.javaClass.declaredMethods.any { it.name == "equals" } }
+    assertFalse { TestObject.javaClass.declaredMethods.any { it.name == "hashCode" } }
+  }
+
+  @EqualsAndHashCode
+  object TestObject
 }

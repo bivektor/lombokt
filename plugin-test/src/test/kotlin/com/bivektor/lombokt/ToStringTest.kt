@@ -7,7 +7,15 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 @Suppress("unused")
+@ToString
 class ToStringTest {
+
+  val p = Person()
+
+  @Test
+  fun testSelf() {
+    assertEquals("ToStringTest(p=$p)", toString())
+  }
 
   @Test
   fun defaultSettings() {
@@ -115,8 +123,15 @@ class ToStringTest {
     assertEquals("Jane", John().toString())
   }
 
+  @Test
+  fun objectTests() {
+    @Suppress("RemoveRedundantQualifierName")
+    assertEquals("TestObject(id=id, createdBy=user, surname=Doe, email=null, computed=computed)", TestObject.toString())
+    assertEquals("declared", TestObjectWithDeclaredMethod.toString())
+  }
+
   @ToString
-  private open class Person(
+  open class Person(
     open var name: String = "John",
     private val age: Int = 10,
     @ToString.Exclude val weight: Double = 3.5
@@ -149,4 +164,28 @@ class ToStringTest {
 
     val computed: String get() = "computed"
   }
+
+  @ToString
+  object TestObject {
+    private val id: String = "id"
+    private var createdBy: String = "user"
+
+    @ToString.Exclude
+    val name: String = "John"
+    var surname: String? = "Doe"
+    val email: String? = null
+
+    @ToString.Include
+    val computed: String get() = "computed"
+  }
+
+  @ToString
+  object TestObjectWithDeclaredMethod {
+    private val id: String = "id"
+
+    override fun toString(): String {
+      return "declared"
+    }
+  }
+
 }
