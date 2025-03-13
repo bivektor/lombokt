@@ -78,23 +78,36 @@ data class Order(
   @EqualsAndHashCode.Exclude
   val createdBy: String
 ) {
-  // This is also included and its getter is used by default
-  var code: String? = null
-    get() = field?.uppercase()
+  // This is not included because properties declared in class body are not supported for data classes
+  var code: String = "some"
 }
 
-@EqualsAndHashCode(doNotUseGetters=true)
-data class Order(
+@EqualsAndHashCode
+class Order(
   val orderId: String,
   val items: List<Item>,
 
   @EqualsAndHashCode.Exclude
   val createdBy: String
 ) {
-  // Field is used instead of getter. Compared to example above, equals is not affected but hashcode is
-  val code: String? = null
-    get() = field?.uppercase()
+  // This property is automatically included because this is not a data class. Its getter is used by default.
+  var code: String = "some"
+    get() = field.uppercase()
 }
+
+@EqualsAndHashCode(doNotUseGetters=true)
+class Order(
+  val orderId: String,
+  val items: List<Item>,
+
+  @EqualsAndHashCode.Exclude
+  val createdBy: String
+) {
+  // Direct field access. Getter is not used
+  var code: String = "some"
+    get() = field.uppercase()
+}
+
 
 @EqualsAndHashCode(onlyExplicitlyIncluded=true)
 class Order(
