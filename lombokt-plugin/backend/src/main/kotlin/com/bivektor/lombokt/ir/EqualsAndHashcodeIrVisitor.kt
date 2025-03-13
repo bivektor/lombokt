@@ -12,7 +12,6 @@ import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.declarations.impl.IrVariableImpl
-import org.jetbrains.kotlin.ir.expressions.IrBlockBody
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
@@ -37,7 +36,6 @@ class EqualsAndHashCodeIrVisitor(private val pluginContext: IrPluginContext) : I
     when (element) {
       is IrDeclaration,
       is IrFile,
-      is IrBlockBody,
       is IrModuleFragment -> element.acceptChildrenVoid(this)
     }
   }

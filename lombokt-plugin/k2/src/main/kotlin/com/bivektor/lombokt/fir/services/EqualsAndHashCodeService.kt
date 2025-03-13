@@ -15,6 +15,8 @@ import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.utils.isInline
+import org.jetbrains.kotlin.fir.declarations.utils.isInner
+import org.jetbrains.kotlin.fir.declarations.utils.isLocal
 import org.jetbrains.kotlin.fir.symbols.impl.FirAnonymousObjectSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
@@ -44,7 +46,7 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
       reporter.reportOn(
         annotation.source,
         UNSUPPORTED_CLASS_TYPE,
-        "@${annotationSimpleName} is only supported on regular classes and objects, not on anonymous objects, interfaces, inline, value and enum classes.",
+        "@${annotationSimpleName} is only supported on top level or nested regular classes, not on objects, interfaces, inner, inline, value and enum classes.",
         context
       )
 
@@ -74,7 +76,7 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
       symbol is FirAnonymousObjectSymbol -> false
 
       // Disallow special types
-      symbol.isInline || symbol.isValueClass -> false
+      symbol.isInline || symbol.isValueClass || symbol.isLocal || symbol.isInner -> false
 
       else -> true
     }

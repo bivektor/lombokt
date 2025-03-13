@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.utils.isInline
+import org.jetbrains.kotlin.fir.declarations.utils.isLocal
 import org.jetbrains.kotlin.fir.symbols.impl.FirAnonymousObjectSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.name.ClassId
@@ -60,7 +61,7 @@ class ToStringService(session: FirSession) : AnnotatedClassMatchingService(sessi
       symbol is FirAnonymousObjectSymbol -> false
 
       // Disallow special types
-      symbol.isInline || symbol.isValueClass -> false
+      symbol.isInline || symbol.isValueClass || symbol.isLocal -> false
 
       else -> true
     }
