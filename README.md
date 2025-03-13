@@ -21,10 +21,12 @@ Add the dependency to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    compileOnly("com.bivektor.lombokt:lombok-api:2.1.10-beta.2")
-    kotlinCompilerPluginClasspath("com.bivektor.lombokt:lombokt-plugin:2.1.10-beta.2")
+    compileOnly("com.bivektor.lombokt:lombok-api:3.0.0-beta.1")
+    kotlinCompilerPluginClasspath("com.bivektor.lombokt:lombokt-plugin:3.0.0-beta.2")
 }
 ```
+
+Please do not use versions before 3.0.0 as they are in fact experimental versions mistakenly published as beta.
 
 Or if using Maven:
 
@@ -66,7 +68,7 @@ Works for both regular classes and data classes.
 
 Only properties with backing fields are included.
 Access is through getters by default but that can be configured as shown below.
-For data classes, only properties from the primary constructor are considered. 
+For data classes, only properties from the primary constructor are considered.
 For non-data classes, all properties including the ones declared in the class body are included by default.
 
 ```kotlin
