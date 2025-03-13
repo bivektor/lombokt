@@ -130,6 +130,20 @@ class ToStringTest {
     assertEquals("declared", TestObjectWithDeclaredMethod.toString())
   }
 
+  @Test
+  fun shouldSkipWhenSuperMethodFinal() {
+    open class ToStringFinal {
+      final override fun toString(): String {
+        return "fromSuper"
+      }
+    }
+
+    @ToString
+    open class Subject(val extra: String = "extra") : ToStringFinal()
+
+    assertEquals("fromSuper", Subject().toString())
+  }
+
   @ToString
   open class Person(
     open var name: String = "John",
@@ -187,5 +201,4 @@ class ToStringTest {
       return "declared"
     }
   }
-
 }

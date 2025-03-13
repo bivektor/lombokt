@@ -12,7 +12,7 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 class LomboktComponentRegistrar : CompilerPluginRegistrar() {
   override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
     IrGenerationExtension.registerExtension(LomboktIrGenerationExtension(configuration.messageCollector))
-    FirExtensionRegistrarAdapter.registerExtension(LomboktFirExtensionRegistrar(configuration.messageCollector))
+    FirExtensionRegistrarAdapter.registerExtension(LomboktFirExtensionRegistrar())
   }
 
   override val supportsK2: Boolean
