@@ -4,7 +4,7 @@ import com.bivektor.lombokt.LomboktNames.EQUALS_METHOD_NAME
 import com.bivektor.lombokt.LomboktNames.HASHCODE_METHOD_NAME
 import com.bivektor.lombokt.PluginKeys.EqualsHashCodeKey
 import com.bivektor.lombokt.fir.NamedFunctionDescriptor
-import com.bivektor.lombokt.fir.getDeclaredFunction
+import com.bivektor.lombokt.fir.isFunctionDeclaredOrNotOverridable
 import com.bivektor.lombokt.fir.isValueClass
 import com.bivektor.lombokt.fir.services.EqualsAndHashCodeService
 import com.bivektor.lombokt.fir.services.equalsAndHashCodeService
@@ -43,10 +43,11 @@ open class EqualsAndHashcodeGenerator(
   private fun isSuitableClass(classSymbol: FirClassSymbol<*>): Boolean {
     if (classSymbol.classKind != ClassKind.CLASS || classSymbol.isValueClass) return false
     if (!equalsAndHashCodeService.isAnnotated(classSymbol)) return false
-    val declaredEqualsFn = classSymbol.getDeclaredFunction(equalsFunction)
-    val declaredHashCodeFn = classSymbol.getDeclaredFunction(hashCodeFunction)
-
-    if (declaredEqualsFn != null || declaredHashCodeFn != null) {
+    if (classSymbol.isFunctionDeclaredOrNotOverridable(
+        session,
+        equalsFunction
+      ) || classSymbol.isFunctionDeclaredOrNotOverridable(session, hashCodeFunction)
+    ) {
       messageCollector.report(
         CompilerMessageSeverity.LOGGING,
         eitherFunctionAlreadyDeclaredMessage(classSymbol)
@@ -64,7 +65,6 @@ open class EqualsAndHashcodeGenerator(
     val classSymbol = context?.owner ?: return emptyList()
 
 
-
     val callableName = callableId.callableName
     return when (callableName) {
       equalsFunction.name -> listOf(generateEqualsMethod(classSymbol).symbol)
@@ -75,7 +75,7 @@ open class EqualsAndHashcodeGenerator(
 
   private fun eitherFunctionAlreadyDeclaredMessage(classSymbol: FirClassSymbol<*>) =
     "Skipping '${equalsFunction.name}' and '${hashCodeFunction.name}' generation on '${classSymbol.classId}'. " +
-      "The class is annotated with '${equalsAndHashCodeService.annotationName}' but it already declares one of these methods"
+      "The class is annotated with '${equalsAndHashCodeService.annotationName}' but it already declares one of these methods or those methods are final in a super class"
 
   private fun generateEqualsMethod(
     classSymbol: FirClassSymbol<*>
