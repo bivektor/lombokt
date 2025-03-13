@@ -22,7 +22,7 @@ Add the dependency to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     compileOnly("com.bivektor.lombokt:lombok-api:3.0.0-beta.1")
-    kotlinCompilerPluginClasspath("com.bivektor.lombokt:lombokt-plugin:3.0.0-beta.2")
+    kotlinCompilerPluginClasspath("com.bivektor.lombokt:lombokt-plugin:3.0.0-beta.1")
 }
 ```
 
