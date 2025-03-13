@@ -64,8 +64,10 @@ class Person(@ToString.Include val name: String, @ToString.Include(name="custom"
 
 Works for both regular classes and data classes.
 
-Only fields and properties with backing fields are included.
-Access is always by fields, thus property getters are not used.
+Only properties with backing fields are included.
+Access is through getters by default but that can be configured as shown below.
+For data classes, only properties from the primary constructor are considered. 
+For non-data classes, all properties including the ones declared in the class body are included by default.
 
 ```kotlin
 import lombokt.EqualsAndHashCode
