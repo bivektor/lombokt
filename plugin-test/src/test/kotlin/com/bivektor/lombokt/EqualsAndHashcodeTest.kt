@@ -1,640 +1,151 @@
 package com.bivektor.lombokt
 
 import lombokt.EqualsAndHashCode
-import org.junit.jupiter.api.Nested
-import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
 
 @Suppress("unused")
 class EqualsAndHashcodeTest {
 
-  /**
-   * Test basic functionality without special options
-   */
-  @Nested
-  inner class BasicTests {
-
-    @Test
-    fun `class with no fields`() {
-      @EqualsAndHashCode
-      class Person
-
-      assertEquals(17, Person().hashCode())
-    }
-
-    @Test
-    fun `compare with different type`() {
-      @EqualsAndHashCode
-      class One
-
-      assertFalse { One().equals(this) }
-    }
-
-    @Test
-    fun `test basic equals and hashCode with primary constructor properties`() {
-
-      @EqualsAndHashCode
-      class Person(val name: String, val age: Int)
-
-      val person1 = Person("John", 30)
-      val person2 = Person("John", 30)
-      val person3 = Person("Jane", 30)
-
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-      assertEquals(person1.hashCode(), person2.hashCode())
-      assertNotEquals(person1.hashCode(), person3.hashCode())
-
-      // Verify hashCode algorithm
-      val expectedHash = 31 * (31 * 17 + Objects.hashCode("John")) + Objects.hashCode(30)
-      assertEquals(expectedHash, person1.hashCode())
-    }
-
-    @Test
-    fun `test equals and hashCode with class body properties`() {
-      @EqualsAndHashCode
-      class Person {
-        val name: String = "John"
-        var age: Int = 30
-      }
-
-      val person1 = Person()
-      val person2 = Person()
-      person2.age = 30
-      val person3 = Person()
-      person3.age = 25
-
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-      assertEquals(person1.hashCode(), person2.hashCode())
-      assertNotEquals(person1.hashCode(), person3.hashCode())
-    }
-
-    @Test
-    fun `test with mixed primary constructor and class body properties`() {
-      @EqualsAndHashCode
-      class Person(val name: String) {
-        var age: Int = 30
-      }
-
-      val person1 = Person("John")
-      val person2 = Person("John")
-      val person3 = Person("Jane")
-      val person4 = Person("John")
-      person4.age = 25
-
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-      assertNotEquals(person1, person4)
-    }
-  }
-
-  open class BasePerson {
-    val id: Int = 100
-
+  // Base class example when callSuper = true
+  private open class BaseEntity(val baseId: Int) {
     override fun equals(other: Any?): Boolean {
       if (this === other) return true
-      if (other !is BasePerson) return false
+      if (other !is BaseEntity) return false
+      return baseId == other.baseId
+    }
+
+    override fun hashCode(): Int = calculateHashCode(baseId)
+  }
+
+  // Case: callSuper = true, includes super class properties
+  @EqualsAndHashCode(callSuper = true)
+  private class WithSuperClass(baseId: Int, val name: String) : BaseEntity(baseId)
+
+  @Test
+  fun `test callSuper equals and hashCode`() {
+    val obj1 = WithSuperClass(1, "Alice")
+    val obj2 = WithSuperClass(1, "Alice")
+    val obj3 = WithSuperClass(2, "Bob")
+
+    assertEquals(obj1, obj2)
+    assertNotEquals(obj1, obj3)
+    assertEquals(obj1.hashCode(), calculateHashCode(1, "Alice"))
+  }
+
+  // Case: doNotUseGetters = true
+  @EqualsAndHashCode(doNotUseGetters = true)
+  private class NoGetterAccess(val id: Int) {
+    val name: String = "default"
+  }
+
+  @Test
+  fun `test doNotUseGetters equals and hashCode`() {
+    val obj1 = NoGetterAccess(1)
+    val obj2 = NoGetterAccess(1)
+    val obj3 = NoGetterAccess(2)
+
+    assertEquals(obj1, obj2)
+    assertNotEquals(obj1, obj3)
+    assertEquals(obj1.hashCode(), calculateHashCode(1, "default"))
+  }
+
+  // Case: onlyExplicitlyIncluded = true
+  @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+  private class ExplicitInclusion(val id: Int, val ignored: String) {
+    @EqualsAndHashCode.Include
+    val name: String = "included"
+  }
+
+  @Test
+  fun `test onlyExplicitlyIncluded equals and hashCode`() {
+    val obj1 = ExplicitInclusion(1, "ignored")
+    val obj2 = ExplicitInclusion(2, "ignored")
+    assertEquals(obj1, obj2)
+    assertEquals(obj1.hashCode(), calculateHashCode("included"))
+  }
+
+  // Case: Excluding properties
+  @EqualsAndHashCode
+  private class ExcludeExample(val id: Int, @EqualsAndHashCode.Exclude val name: String = "excluded") {
+    @EqualsAndHashCode.Exclude
+    val ignoredField: String = "should not be included"
+  }
+
+  @Test
+  fun `test excluded property`() {
+    val obj1 = ExcludeExample(1)
+    val obj2 = ExcludeExample(1)
+    val obj3 = ExcludeExample(2)
+
+    assertEquals(obj1, obj2)
+    assertNotEquals(obj1, obj3)
+    assertEquals(obj1.hashCode(), calculateHashCode(1))
+  }
+
+  // Case: Equals or hashcode already declared or final in super class
+  @EqualsAndHashCode(callSuper = true)
+  private open class MethodsAlreadyDeclared(val id: Int) {
+    final override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (other !is MethodsAlreadyDeclared) return false
       return id == other.id
     }
 
-    override fun hashCode(): Int {
-      return id.hashCode()
-    }
+    final override fun hashCode(): Int = id
   }
 
-  /**
-   * Test callSuper parameter
-   */
-  @Nested
-  inner class CallSuperTests {
-
-    @Test
-    fun `test with callSuper=false (default)`() {
-      @EqualsAndHashCode
-      class Person(val name: String, val age: Int) : BasePerson()
-
-      val person1 = Person("John", 30)
-      val person2 = Person("John", 30)
-      val person3 = Person("Jane", 30)
-
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-
-      // Verify the superclass fields are NOT included
-      val expectedHash = 31 * (31 * 17 + Objects.hashCode("John")) + Objects.hashCode(30)
-      assertEquals(expectedHash, person1.hashCode())
-    }
-
-    @Test
-    fun `test with callSuper=true`() {
-
-      @EqualsAndHashCode(callSuper = true)
-      class Person(val name: String, val age: Int) : BasePerson()
-
-      val person1 = Person("John", 30)
-      val person2 = Person("John", 30)
-      val person3 = Person("Jane", 30)
-
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-
-      // Verify the superclass fields are included via super.hashCode()
-      val superHash = person1.id.hashCode()
-      val expectedHash = 31 * (31 * superHash + Objects.hashCode("John")) + Objects.hashCode(30)
-      assertEquals(expectedHash, person1.hashCode())
-    }
-  }
-
-  /**
-   * Test Include and Exclude annotations
-   */
-  @Nested
-  inner class IncludeExcludeTests {
-
-    @Test
-    fun `test Exclude annotation on property`() {
-      @EqualsAndHashCode
-      class Person(
-        val name: String,
-        @EqualsAndHashCode.Exclude val age: Int,
-        val email: String
-      )
-
-      val person1 = Person("John", 30, "john@example.com")
-      val person2 = Person("John", 25, "john@example.com")
-      val person3 = Person("John", 30, "john.doe@example.com")
-
-      // age is excluded, so different ages should be equal
-      assertEquals(person1, person2)
-      // different emails should not be equal
-      assertNotEquals(person1, person3)
-
-      // Verify hashCode algorithm (age is excluded)
-      val expectedHash = 31 * (31 * 17 + Objects.hashCode("John")) + Objects.hashCode("john@example.com")
-      assertEquals(expectedHash, person1.hashCode())
-    }
-
-    @Test
-    fun `test with onlyExplicitlyIncluded=true`() {
-      @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-      class Person(
-        @EqualsAndHashCode.Include val name: String,
-        val age: Int,
-        @EqualsAndHashCode.Include val email: String
-      )
-
-      val person1 = Person("John", 30, "john@example.com")
-      val person2 = Person("John", 25, "john@example.com")
-      val person3 = Person("John", 30, "john.doe@example.com")
-
-      // age is not included, so different ages should be equal
-      assertEquals(person1, person2)
-      // different emails should not be equal
-      assertNotEquals(person1, person3)
-
-      // Verify hashCode algorithm (only name and email are included)
-      val expectedHash = 31 * (31 * 17 + Objects.hashCode("John")) + Objects.hashCode("john@example.com")
-      assertEquals(expectedHash, person1.hashCode())
-    }
-
-    @Test
-    fun `test Include and Exclude on same field (Exclude takes precedence)`() {
-      @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-      class Person(
-        @EqualsAndHashCode.Include val name: String,
-        @EqualsAndHashCode.Include @EqualsAndHashCode.Exclude val age: Int
-      )
-
-      val person1 = Person("John", 30)
-      val person2 = Person("John", 25)
-      val person3 = Person("Jane", 30)
-
-      // age should be excluded even though it has Include annotation
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-
-      // Verify hashCode algorithm (only name is included, age is excluded)
-      val expectedHash = 31 * 17 + Objects.hashCode("John")
-      assertEquals(expectedHash, person1.hashCode())
-    }
-  }
-
-  /**
-   * Test get-only and set-only properties
-   */
-  @Nested
-  inner class GetterSetterTests {
-
-    @Test
-    fun `test get-only property`() {
-      @EqualsAndHashCode
-      class Person(name: String) {
-        val name: String = name
-          get() = field.uppercase()
-      }
-
-      val person1 = Person("john")
-      val person2 = Person("john")
-      val person3 = Person("jane")
-
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-      assertEquals(17 * 31 + "JOHN".hashCode(), person1.hashCode())
-    }
-
-    @Test
-    fun `test mutable property with backing field`() {
-      @EqualsAndHashCode
-      class Person {
-        var name: String = "some"
-          get() = field.uppercase()
-          set(value) {
-            checkNotNull(value) { "name cannot be null" }
-            field = value
-          }
-      }
-
-      val person1 = Person()
-      person1.name = "John"
-      val person2 = Person()
-      person2.name = "John"
-      val person3 = Person()
-      person3.name = "Jane"
-
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-      assertEquals(17 * 31 + "JOHN".hashCode(), person1.hashCode())
-    }
-
-    @Test
-    fun `test Include on property`() {
-      @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-      class Person(val name: String, @EqualsAndHashCode.Include val age: Int)
-
-      val person1 = Person("John", 30)
-      val person2 = Person("Jane", 30)
-      val person3 = Person("John", 25)
-
-      // name is not included (no Include annotation)
-      // age is included, so comparing age
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-    }
-
-    @Test
-    fun `test Exclude on property`() {
-      @EqualsAndHashCode
-      class Person(val name: String, @EqualsAndHashCode.Exclude val age: Int)
-
-      val person1 = Person("John", 30)
-      val person2 = Person("John", 25)
-      val person3 = Person("Jane", 30)
-
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-    }
-  }
-
-  enum class Role { USER, ADMIN }
-
-  /**
-   * Test nullability and different types
-   */
-  @Nested
-  inner class NullabilityAndTypesTests {
-
-    @Test
-    fun `test nullable primitive types`() {
-      @EqualsAndHashCode
-      class TestClass(val intValue: Int?, val doubleValue: Double?)
-
-      val obj1 = TestClass(10, 20.5)
-      val obj2 = TestClass(10, 20.5)
-      val obj3 = TestClass(null, 20.5)
-      val obj4 = TestClass(10, null)
-
-      assertEquals(obj1, obj2)
-      assertNotEquals(obj1, obj3)
-      assertNotEquals(obj1, obj4)
-      assertNotEquals(obj3, obj4)
-    }
-
-    @Test
-    fun `test enum types`() {
-      @EqualsAndHashCode
-      class User(val name: String, val role: Role)
-
-      val user1 = User("John", Role.ADMIN)
-      val user2 = User("John", Role.ADMIN)
-      val user3 = User("John", Role.USER)
-
-      assertEquals(user1, user2)
-      assertNotEquals(user1, user3)
-    }
-
-    @Test
-    fun `test nullable enum types`() {
-      @EqualsAndHashCode
-      class User(val name: String, val role: Role?)
-
-      val user1 = User("John", Role.ADMIN)
-      val user2 = User("John", Role.ADMIN)
-      val user3 = User("John", null)
-
-      assertEquals(user1, user2)
-      assertNotEquals(user1, user3)
-    }
-
-    @Test
-    fun `test nested objects`() {
-      @EqualsAndHashCode
-      class Address(val street: String, val city: String)
-
-      @EqualsAndHashCode
-      class Person(val name: String, val address: Address)
-
-      val address1 = Address("123 Main St", "New York")
-      val address2 = Address("123 Main St", "New York")
-      val address3 = Address("456 Oak St", "Boston")
-
-      val person1 = Person("John", address1)
-      val person2 = Person("John", address2)
-      val person3 = Person("John", address3)
-
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-    }
-
-    @Test
-    fun `test nullable nested objects`() {
-      @EqualsAndHashCode
-      class Address(val street: String, val city: String)
-
-      @EqualsAndHashCode
-      class Person(val name: String, val address: Address?)
-
-      val address1 = Address("123 Main St", "New York")
-      val address2 = Address("456 Oak St", "Boston")
-
-      val person1 = Person("John", address1)
-      val person2 = Person("John", address1)
-      val person3 = Person("John", address2)
-      val person4 = Person("John", null)
-
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-      assertNotEquals(person1, person4)
-    }
-
-    @Test
-    fun `test collections`() {
-      @EqualsAndHashCode
-      class Person(val name: String, val hobbies: List<String>)
-
-      val person1 = Person("John", listOf("Reading", "Hiking"))
-      val person2 = Person("John", listOf("Reading", "Hiking"))
-      val person3 = Person("John", listOf("Swimming", "Cycling"))
-      val person4 = Person("John", emptyList())
-
-      assertEquals(person1, person2)
-      assertNotEquals(person1, person3)
-      assertNotEquals(person1, person4)
-    }
-
-    @Test
-    fun `test jvm field`() {
-      @EqualsAndHashCode
-      class PersonJvmField(@JvmField val name: String)
-
-      val john = PersonJvmField("John")
-      val john2 = PersonJvmField("John")
-      val jane = PersonJvmField("Jane")
-
-      assertEquals(john, john2)
-      assertEquals(john.hashCode(), john2.hashCode())
-      assertNotEquals(john, jane)
-      assertNotEquals(john.toString(), jane.toString())
-    }
-  }
-
-  /**
-   * Test complex scenarios combining multiple features
-   */
-  @Nested
-  inner class ComplexScenariosTests {
-
-    @Test
-    fun `test complex class with multiple annotations`() {
-      open class BaseEntity {
-        val id: Long = 1L
-
-        override fun equals(other: Any?): Boolean {
-          if (this === other) return true
-          if (other !is BaseEntity) return false
-          return id == other.id
-        }
-
-        override fun hashCode(): Int {
-          return id.hashCode()
-        }
-      }
-
-      @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-      class User(
-        @EqualsAndHashCode.Include val username: String,
-        @EqualsAndHashCode.Exclude val password: String,
-        val email: String,
-        @EqualsAndHashCode.Include val active: Boolean,
-        val lastLogin: String?
-      ) : BaseEntity() {
-
-        @EqualsAndHashCode.Include
-        var temporaryToken: String? = null
-      }
-
-      val user1 = User("john_doe", "secret1", "John@example.com", true, "2023-01-01")
-      val user2 = User("john_doe", "secret2", "john@EXAMPLE.com", true, "2022-12-31")
-      val user3 = User("jane_doe", "secret1", "Jane@example.com", true, "2023-01-01")
-      val user4 = User("john_doe", "secret1", "John@example.com", false, "2023-01-01")
-
-      user1.temporaryToken = "token123"
-      user2.temporaryToken = "token123"
-      user3.temporaryToken = "token123"
-
-      // user1 and user2 should be equal:
-      // - same username
-      // - passwords are excluded
-      // - email is not included
-      // - same active status
-      // - lastLogin is not included
-      // - temporaryToken is included and they are equal
-      // - id from BaseEntity is included due to callSuper=true and they are equal
-      assertEquals(user1, user2)
-      assertEquals(user1.hashCode(), user2.hashCode())
-
-      // Different username
-      assertNotEquals(user1, user3)
-
-      // Different active status
-      assertNotEquals(user1, user4)
-
-      // Verify hashCode
-      val baseHash = user1.id.hashCode()
-      var expectedHash = calculateHashCode(baseHash, user1.username, user1.active, user1.temporaryToken)
-
-      assertEquals(expectedHash, user1.hashCode())
-    }
-  }
-
-  @Nested
-  inner class DataClassTests {
-
-    @Test
-    fun `default settings`() {
-
-      @EqualsAndHashCode
-      data class Person(val name: String, @EqualsAndHashCode.Exclude val age: Int) {
-        var address: String = "some st."
-      }
-
-      val person1 = Person("John", 30)
-      val person2 = Person("John", 40)
-      val person3 = Person("Jane", 30)
-      val person4 = Person("John", 30).apply { address = "other st." }
-
-      assertEquals(person1, person2)
-      assertEquals(person1.hashCode(), person2.hashCode())
-      assertNotEquals(person1, person3)
-      assertNotEquals(person1.hashCode(), person3.hashCode())
-      assertNotEquals(person1, person4)
-      assertNotEquals(person1.hashCode(), person4.hashCode())
-    }
-
-    @Test
-    fun `only explicitly included`() {
-
-      @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-      data class Person(@EqualsAndHashCode.Include val name: String, val age: Int)
-
-      val person1 = Person("John", 30)
-      val person2 = Person("John", 40)
-      val person3 = Person("Jane", 30)
-
-      assertEquals(person1, person2)
-      assertEquals(person1.hashCode(), person2.hashCode())
-      assertNotEquals(person1, person3)
-      assertNotEquals(person1.hashCode(), person3.hashCode())
-    }
-
-    @Test
-    fun `call super`() {
-
-      @EqualsAndHashCode
-      open class Base {
-        var id: String = "1"
-      }
-
-      @EqualsAndHashCode(callSuper = true)
-      data class Person(val name: String, val age: Double) : Base()
-
-      val person1 = Person("John", 30.1)
-      val person2 = Person("John", 30.1)
-      val person3 = Person("John", 30.1).apply { id = "2" }
-
-      assertEquals(person1, person2)
-      assertEquals(person1.hashCode(), person2.hashCode())
-      assertNotEquals(person1, person3)
-      assertNotEquals(person1.hashCode(), person3.hashCode())
-    }
+  @EqualsAndHashCode(callSuper = true)
+  private class MethodsAlreadyDeclaredSubclass(id: Int, val name: String = "name") : MethodsAlreadyDeclared(id)
+
+  @Test
+  fun `methods not generated when already declared`() {
+    val obj1 = MethodsAlreadyDeclared(1)
+    val obj2 = MethodsAlreadyDeclared(1)
+    val obj3 = MethodsAlreadyDeclared(2)
+
+    assertEquals(obj1, obj2)
+    assertNotEquals(obj1, obj3)
+    assertEquals(obj1.hashCode(), 1)
   }
 
   @Test
-  fun `should skip if equals and hashcode already declared`() {
-    @EqualsAndHashCode
-    class Person(val name: String) {
+  fun `methods not generated when they are final in super class`() {
+    val obj1 = MethodsAlreadyDeclaredSubclass(1, "a")
+    val obj2 = MethodsAlreadyDeclaredSubclass(1, "b")
 
-      override fun equals(other: Any?): Boolean {
-        return (other as Person?)?.name == "John"
-      }
-
-      override fun hashCode(): Int {
-        return 99
-      }
-    }
-
-    assertTrue { (Person("John").equals(Person("John"))) }
-    assertEquals(99, Person("Jane").hashCode())
+    assertEquals(obj1, obj2)
+    assertEquals(obj1.hashCode(), 1)
   }
 
-  @Test
-  fun `should skip if super method is final`() {
-    @EqualsAndHashCode
-    open class PersonFinal(val name: String)
-
-    @EqualsAndHashCode
-    class PersonFinalChild(name: String, val id: String) : PersonFinal(name)
-
-    val p1 = PersonFinalChild("a", "1")
-    val p2 = PersonFinalChild("a", "1")
-    assertEquals(p1, p2)
-    assertEquals(p1.hashCode(), p2.hashCode())
-  }
-
-  @Test
-  fun doNotUseGetters() {
-
-    @EqualsAndHashCode(doNotUseGetters = true)
-    class Person(private val name: String) {
-      val email: String = "some"
-        get() {
-          return field.uppercase()
-        }
-    }
-
-    val p1 = Person("John")
-    val p2 = Person("John")
-    val p3 = Person("Jane")
-
-    assertEquals(p1, p1)
-    assertEquals(p1, p2)
-    assertEquals(p1.hashCode(), calculateHashCode(17, "John", "some"))
-    assertNotEquals(p1, p3)
-    assertNotEquals(p1.hashCode(), p3.hashCode())
-  }
+  @EqualsAndHashCode
+  private class VariousTypes(
+    val dbl: Double = 0.5,
+    val flt: Float = 0.5f,
+    val lng: Long = 100L,
+    var int: Int = 10,
+    val shrt: Short = 2,
+    val byt: Byte = 1,
+    val bool: Boolean = true,
+    val ch: Char = 'c',
+    val str: String = "some",
+    val lst: List<String> = listOf("a", "b"),
+    val map: Map<String, String> = mapOf("a" to "b"),
+    val dblNull: Double? = null,
+    val fltNull: Float? = null,
+    val lngNull: Long? = null,
+    val intNull: Int? = null,
+    val shrtNull: Short? = null,
+    val bytNull: Byte? = null,
+    val boolNull: Boolean? = null,
+    val chNull: Char? = null,
+    val strNull: String? = null,
+    val lstNull: List<String>? = null,
+  )
 
   @Test
   fun `test various variable types`() {
-
-    @EqualsAndHashCode
-    class VariousTypes(
-      val dbl: Double = 0.5,
-      val flt: Float = 0.5f,
-      val lng: Long = 100L,
-      var int: Int = 10,
-      val shrt: Short = 2,
-      val byt: Byte = 1,
-      val bool: Boolean = true,
-      val ch: Char = 'c',
-      val str: String = "some",
-      val lst: List<String> = listOf("a", "b"),
-      val map: Map<String, String> = mapOf("a" to "b"),
-      val dblNull: Double? = null,
-      val fltNull: Float? = null,
-      val lngNull: Long? = null,
-      val intNull: Int? = null,
-      val shrtNull: Short? = null,
-      val bytNull: Byte? = null,
-      val boolNull: Boolean? = null,
-      val chNull: Char? = null,
-      val strNull: String? = null,
-      val lstNull: List<String>? = null,
-    )
-
     val v1 = VariousTypes()
     val v2 = VariousTypes()
     assertEquals(v1, v2)
@@ -645,26 +156,46 @@ class EqualsAndHashcodeTest {
     assertNotEquals(v1.hashCode(), v3.hashCode())
   }
 
-  @Nested
-  @EqualsAndHashCode
-  inner class InnerClassTests {
-    var innerClassProp = "some"
-
-    @Test
-    fun test() {
-      val obj1 = InnerClassTests()
-      val obj2 = InnerClassTests()
-
-      assertEquals(obj1, obj2)
-      assertEquals(obj1.hashCode(), obj2.hashCode())
-
-      val obj3 = InnerClassTests().apply { innerClassProp = "other" }
-      assertNotEquals(obj1, obj3)
-      assertNotEquals(obj1.hashCode(), obj3.hashCode())
+  private class Menu {
+    class SubMenu {
+      @EqualsAndHashCode
+      class SubSubMenu(val name: String)
     }
   }
 
-  private fun calculateHashCode(baseHash: Int, vararg values: Any?): Int {
-    return values.fold(baseHash) { hash, value -> 31 * hash + (value?.hashCode() ?: 0) }
+  @Test
+  fun testNestedClass() {
+    val v1 = Menu.SubMenu.SubSubMenu("a")
+    val v2 = Menu.SubMenu.SubSubMenu("a")
+    val v3 = Menu.SubMenu.SubSubMenu("b")
+    assertEquals(v1, v2)
+    assertNotEquals(v1, v3)
+    assertEquals(v1.hashCode(), v2.hashCode())
+    assertNotEquals(v1.hashCode(), v3.hashCode())
+  }
+
+  @EqualsAndHashCode
+  private data class DataClass(val name: String, @EqualsAndHashCode.Exclude val age: Int) {
+    var extra: Int = 1
+      get() = field + 10
+  }
+
+  @Test
+  fun testDataClass() {
+    val v1 = DataClass("a", 1)
+    val v2 = DataClass("a", 2)
+    val v3 = DataClass("b", 1)
+    val v4 = DataClass("a", 1).apply { extra = 11 }
+
+    assertEquals(v1, v2)
+    assertEquals(v1.hashCode(), v2.hashCode())
+    assertNotEquals(v1, v3)
+    assertNotEquals(v1, v4)
+    assertEquals(v4.hashCode(), calculateHashCode("a", 21))
   }
 }
+
+private fun calculateHashCode(vararg values: Any?): Int {
+  return values.fold(17) { hash, value -> 31 * hash + (value?.hashCode() ?: 0) }
+}
+

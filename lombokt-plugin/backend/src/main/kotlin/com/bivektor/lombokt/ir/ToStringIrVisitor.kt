@@ -29,7 +29,6 @@ class ToStringIrVisitor(
     when (element) {
       is IrDeclaration,
       is IrFile,
-      is IrBlockBody,
       is IrModuleFragment -> element.acceptChildrenVoid(this)
     }
   }
