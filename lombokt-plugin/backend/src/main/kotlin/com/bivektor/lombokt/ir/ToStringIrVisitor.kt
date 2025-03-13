@@ -1,7 +1,8 @@
-package com.bivektor.lombokt
+package com.bivektor.lombokt.ir
 
-import com.bivektor.lombokt.LomboktNames.TO_STRING_ANNOTATION_NAME
-import com.bivektor.lombokt.LomboktNames.TO_STRING_METHOD_NAME
+import com.bivektor.lombokt.LomboktNames
+import com.bivektor.lombokt.PluginKeys
+import com.bivektor.lombokt.isGeneratedByPluginKey
 import getConstValueByName
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
@@ -70,7 +71,7 @@ class ToStringIrVisitor(
       parentClass.acceptChildrenVoid(object : IrVisitorVoid() {
 
         override fun visitProperty(declaration: IrProperty) {
-          if (declaration.origin != IrDeclarationOrigin.DEFINED) return
+          if (declaration.origin != IrDeclarationOrigin.Companion.DEFINED) return
           val getter = declaration.getter ?: return
           val hasBackingField = declaration.backingField != null
 
@@ -130,13 +131,13 @@ class ToStringIrVisitor(
     return (parentClass.superClass ?: pluginContext.irBuiltIns.anyClass.owner)
       .functions
       .singleOrNull {
-        it.name == TO_STRING_METHOD_NAME && it.valueParameters.isEmpty()
+        it.name == LomboktNames.TO_STRING_METHOD_NAME && it.valueParameters.isEmpty()
       }!!
   }
 
   private fun getAnnotationAttributes(klass: IrClass): AnnotationConfig {
-    val annotation = requireNotNull(klass.annotations.findAnnotation(TO_STRING_ANNOTATION_NAME)) {
-      "Class ${klass.kotlinFqName} is not annotated with @" + TO_STRING_ANNOTATION_NAME
+    val annotation = requireNotNull(klass.annotations.findAnnotation(LomboktNames.TO_STRING_ANNOTATION_NAME)) {
+      "Class ${klass.kotlinFqName} is not annotated with @" + LomboktNames.TO_STRING_ANNOTATION_NAME
     }
 
     return parseToStringAnnotation(annotation)
@@ -188,5 +189,5 @@ class ToStringIrVisitor(
   }
 }
 
-private val INCLUDE_ANNOTATION_NAME = TO_STRING_ANNOTATION_NAME.child(Name.identifier("Include"))
-private val EXCLUDE_ANNOTATION_NAME = TO_STRING_ANNOTATION_NAME.child(Name.identifier("Exclude"))
+private val INCLUDE_ANNOTATION_NAME = LomboktNames.TO_STRING_ANNOTATION_NAME.child(Name.identifier("Include"))
+private val EXCLUDE_ANNOTATION_NAME = LomboktNames.TO_STRING_ANNOTATION_NAME.child(Name.identifier("Exclude"))

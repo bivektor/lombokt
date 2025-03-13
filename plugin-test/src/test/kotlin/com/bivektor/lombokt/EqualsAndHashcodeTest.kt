@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
@@ -16,6 +17,22 @@ class EqualsAndHashcodeTest {
    */
   @Nested
   inner class BasicTests {
+
+    @Test
+    fun `class with no fields`() {
+      @EqualsAndHashCode
+      class Person
+
+      assertEquals(17, Person().hashCode())
+    }
+
+    @Test
+    fun `compare with different type`() {
+      @EqualsAndHashCode
+      class One
+
+      assertFalse { One().equals(this) }
+    }
 
     @Test
     fun `test basic equals and hashCode with primary constructor properties`() {
@@ -216,27 +233,29 @@ class EqualsAndHashcodeTest {
     @Test
     fun `test get-only property`() {
       @EqualsAndHashCode
-      class Person(private val _name: String) {
-        val name: String get() = _name
+      class Person(name: String) {
+        val name: String = name
+          get() = field.uppercase()
       }
 
-      val person1 = Person("John")
-      val person2 = Person("John")
-      val person3 = Person("Jane")
+      val person1 = Person("john")
+      val person2 = Person("john")
+      val person3 = Person("jane")
 
       assertEquals(person1, person2)
       assertNotEquals(person1, person3)
+      assertEquals(17 * 31 + "JOHN".hashCode(), person1.hashCode())
     }
 
     @Test
-    fun `test set-only property`() {
+    fun `test mutable property with backing field`() {
       @EqualsAndHashCode
       class Person {
-        private var _name: String = ""
-        var name: String
-          get() = TODO()
+        var name: String = "some"
+          get() = field.uppercase()
           set(value) {
-            _name = value
+            checkNotNull(value) { "name cannot be null" }
+            field = value
           }
       }
 
@@ -249,6 +268,7 @@ class EqualsAndHashcodeTest {
 
       assertEquals(person1, person2)
       assertNotEquals(person1, person3)
+      assertEquals(17 * 31 + "JOHN".hashCode(), person1.hashCode())
     }
 
     @Test
@@ -385,6 +405,21 @@ class EqualsAndHashcodeTest {
       assertNotEquals(person1, person3)
       assertNotEquals(person1, person4)
     }
+
+    @Test
+    fun `test jvm field`() {
+      @EqualsAndHashCode
+      class PersonJvmField(@JvmField val name: String)
+
+      val john = PersonJvmField("John")
+      val john2 = PersonJvmField("John")
+      val jane = PersonJvmField("Jane")
+
+      assertEquals(john, john2)
+      assertEquals(john.hashCode(), john2.hashCode())
+      assertNotEquals(john, jane)
+      assertNotEquals(john.toString(), jane.toString())
+    }
   }
 
   /**
@@ -450,10 +485,7 @@ class EqualsAndHashcodeTest {
 
       // Verify hashCode
       val baseHash = user1.id.hashCode()
-      var expectedHash = baseHash
-      expectedHash = 31 * expectedHash + Objects.hashCode(user1.username)
-      expectedHash = 31 * expectedHash + Objects.hashCode(user1.active)
-      expectedHash = 31 * expectedHash + Objects.hashCode(user1.temporaryToken)
+      var expectedHash = calculateHashCode(baseHash, user1.username, user1.active, user1.temporaryToken)
 
       assertEquals(expectedHash, user1.hashCode())
     }
@@ -553,5 +585,86 @@ class EqualsAndHashcodeTest {
     assertEquals(p1.hashCode(), p2.hashCode())
   }
 
+  @Test
+  fun doNotUseGetters() {
 
+    @EqualsAndHashCode(doNotUseGetters = true)
+    class Person(private val name: String) {
+      val email: String = "some"
+        get() {
+          return field.uppercase()
+        }
+    }
+
+    val p1 = Person("John")
+    val p2 = Person("John")
+    val p3 = Person("Jane")
+
+    assertEquals(p1, p1)
+    assertEquals(p1, p2)
+    assertEquals(p1.hashCode(), calculateHashCode(17, "John", "some"))
+    assertNotEquals(p1, p3)
+    assertNotEquals(p1.hashCode(), p3.hashCode())
+  }
+
+  @Test
+  fun `test various variable types`() {
+
+    @EqualsAndHashCode
+    class VariousTypes(
+      val dbl: Double = 0.5,
+      val flt: Float = 0.5f,
+      val lng: Long = 100L,
+      var int: Int = 10,
+      val shrt: Short = 2,
+      val byt: Byte = 1,
+      val bool: Boolean = true,
+      val ch: Char = 'c',
+      val str: String = "some",
+      val lst: List<String> = listOf("a", "b"),
+      val map: Map<String, String> = mapOf("a" to "b"),
+      val dblNull: Double? = null,
+      val fltNull: Float? = null,
+      val lngNull: Long? = null,
+      val intNull: Int? = null,
+      val shrtNull: Short? = null,
+      val bytNull: Byte? = null,
+      val boolNull: Boolean? = null,
+      val chNull: Char? = null,
+      val strNull: String? = null,
+      val lstNull: List<String>? = null,
+    )
+
+    val v1 = VariousTypes()
+    val v2 = VariousTypes()
+    assertEquals(v1, v2)
+    assertEquals(v1.hashCode(), v2.hashCode())
+
+    val v3 = VariousTypes(dblNull = 0.1)
+    assertNotEquals(v1, v3)
+    assertNotEquals(v1.hashCode(), v3.hashCode())
+  }
+
+  @Nested
+  @EqualsAndHashCode
+  inner class InnerClassTests {
+    var innerClassProp = "some"
+
+    @Test
+    fun test() {
+      val obj1 = InnerClassTests()
+      val obj2 = InnerClassTests()
+
+      assertEquals(obj1, obj2)
+      assertEquals(obj1.hashCode(), obj2.hashCode())
+
+      val obj3 = InnerClassTests().apply { innerClassProp = "other" }
+      assertNotEquals(obj1, obj3)
+      assertNotEquals(obj1.hashCode(), obj3.hashCode())
+    }
+  }
+
+  private fun calculateHashCode(baseHash: Int, vararg values: Any?): Int {
+    return values.fold(baseHash) { hash, value -> 31 * hash + (value?.hashCode() ?: 0) }
+  }
 }
