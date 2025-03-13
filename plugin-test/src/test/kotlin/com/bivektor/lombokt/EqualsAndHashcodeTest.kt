@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Nested
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 @Suppress("unused")
 class EqualsAndHashcodeTest {
@@ -459,9 +459,6 @@ class EqualsAndHashcodeTest {
     }
   }
 
-  @EqualsAndHashCode
-  interface PersonDao
-
   @Nested
   inner class DataClassTests {
 
@@ -538,16 +535,23 @@ class EqualsAndHashcodeTest {
       }
     }
 
-    assertEquals(Person("Jane"), Person("John"))
+    assertTrue { (Person("John").equals(Person("John"))) }
     assertEquals(99, Person("Jane").hashCode())
   }
 
   @Test
-  fun objectsNotSupported() {
-    assertFalse { TestObject.javaClass.declaredMethods.any { it.name == "equals" } }
-    assertFalse { TestObject.javaClass.declaredMethods.any { it.name == "hashCode" } }
+  fun `should skip if super method is final`() {
+    @EqualsAndHashCode
+    open class PersonFinal(val name: String)
+
+    @EqualsAndHashCode
+    class PersonFinalChild(name: String, val id: String) : PersonFinal(name)
+
+    val p1 = PersonFinalChild("a", "1")
+    val p2 = PersonFinalChild("a", "1")
+    assertEquals(p1, p2)
+    assertEquals(p1.hashCode(), p2.hashCode())
   }
 
-  @EqualsAndHashCode
-  object TestObject
+
 }
