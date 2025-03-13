@@ -74,26 +74,33 @@ class EqualsAndHashCodeIrVisitor(private val pluginContext: IrPluginContext) : I
     annotation: EqualsAndHashCodeAnnotationConfig,
     parentClass: IrClass
   ): List<IrProperty> {
-    val matchingProps = mutableListOf<IrProperty>()
-    for (property in parentClass.properties.filter { it.origin == IrDeclarationOrigin.DEFINED }) {
-      if (property.backingField == null) continue
-      if (isIncludedMode(annotation, getIncludeMode(property.annotations)))
-        matchingProps.add(property)
-    }
+    val constructorProperties = if (parentClass.isData)
+      parentClass.primaryConstructor!!.valueParameters.map { it.name }.toList()
+    else emptyList()
 
-    return matchingProps.sortedBy { it.startOffset }
+    return parentClass.properties
+      .filter { shouldIncludeProperty(it, parentClass, annotation, constructorProperties.contains(it.name)) }
+      .toList()
+  }
+
+  private fun shouldIncludeProperty(
+    property: IrProperty,
+    parentClass: IrClass,
+    annotation: EqualsAndHashCodeAnnotationConfig,
+    isFromConstructor: Boolean
+  ): Boolean {
+    if (property.origin != IrDeclarationOrigin.DEFINED) return false
+    if (property.backingField == null) return false
+    val includeMode = getIncludeMode(property.annotations)
+    if (parentClass.isData && !isFromConstructor) return false
+
+    return if (annotation.onlyExplicitlyIncluded) includeMode == IncludeMode.INCLUDE else includeMode != IncludeMode.EXCLUDE
   }
 
   private fun getIncludeMode(annotations: List<IrConstructorCall>): IncludeMode? {
     if (annotations.findAnnotation(EXCLUDE_ANNOTATION_NAME) != null) return IncludeMode.EXCLUDE
     if (annotations.findAnnotation(INCLUDE_ANNOTATION_NAME) != null) return IncludeMode.INCLUDE
     return null
-  }
-
-  private fun isIncludedMode(annotation: EqualsAndHashCodeAnnotationConfig, mode: IncludeMode?): Boolean {
-    return if (annotation.onlyExplicitlyIncluded)
-      mode == IncludeMode.INCLUDE
-    else mode != IncludeMode.EXCLUDE
   }
 
   private fun parseAnnotationAttributes(annotation: IrConstructorCall): EqualsAndHashCodeAnnotationConfig {

@@ -175,9 +175,13 @@ class EqualsAndHashcodeTest {
   }
 
   @EqualsAndHashCode
-  private data class DataClass(val name: String, @EqualsAndHashCode.Exclude val age: Int) {
-    var extra: Int = 1
-      get() = field + 10
+  private data class DataClass(val name: String, @EqualsAndHashCode.Exclude var age: Int) {
+    var excludedByDefault: Int = 1
+  }
+
+  @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+  private data class DataClassExplicit(@EqualsAndHashCode.Include val name: String, var age: Int) {
+    var excludedByDefault: Int = 1
   }
 
   @Test
@@ -185,13 +189,21 @@ class EqualsAndHashcodeTest {
     val v1 = DataClass("a", 1)
     val v2 = DataClass("a", 2)
     val v3 = DataClass("b", 1)
-    val v4 = DataClass("a", 1).apply { extra = 11 }
+    val v4 = DataClass("a", 1).apply { excludedByDefault = 10 }
+
+    val explicit1 = DataClassExplicit("a", 1)
+    val explicit2 = DataClassExplicit("a", 2)
+    val explicit3 = DataClassExplicit("b", 1)
 
     assertEquals(v1, v2)
     assertEquals(v1.hashCode(), v2.hashCode())
     assertNotEquals(v1, v3)
-    assertNotEquals(v1, v4)
-    assertEquals(v4.hashCode(), calculateHashCode("a", 21))
+    assertEquals(v1, v4)
+    assertEquals(v1.hashCode(), v4.hashCode())
+    assertEquals(explicit1, explicit2)
+    assertEquals(explicit1.hashCode(), explicit2.hashCode())
+    assertNotEquals(explicit1, explicit3)
+    assertNotEquals(explicit1.hashCode(), explicit3.hashCode())
   }
 }
 
