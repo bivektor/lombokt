@@ -4,27 +4,44 @@ import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrDeclaration
+import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
 
 class LomboktIrGenerationExtension(private val messageCollector: MessageCollector) : IrGenerationExtension {
 
-  override fun generate(
-    moduleFragment: IrModuleFragment,
-    pluginContext: IrPluginContext
-  ) {
-    val visitors = listOf(
-      EqualsAndHashCodeIrVisitor(pluginContext),
-      ToStringIrVisitor(pluginContext, messageCollector)
-    )
+  override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
+    moduleFragment.acceptVoid(LomboktIrTransformer(pluginContext, messageCollector))
+  }
 
-    // TODO: Optimize this to visit elements only once for each visitor
-    moduleFragment.acceptChildrenVoid(object : IrVisitorVoid() {
-      override fun visitElement(element: IrElement) {
-        visitors.forEach { element.acceptVoid(it) }
+  private class LomboktIrTransformer(
+    private val pluginContext: IrPluginContext,
+    messageCollector: MessageCollector
+  ) : IrVisitorVoid() {
+
+    private val toStringGenerator = ToStringIrBodyGenerator(pluginContext, messageCollector)
+
+    override fun visitElement(element: IrElement) {
+      when (element) {
+        is IrDeclaration,
+        is IrFile,
+        is IrModuleFragment -> element.acceptChildrenVoid(this)
       }
-    })
+    }
+
+    override fun visitClass(declaration: IrClass) {
+      super.visitClass(declaration)
+      EqualsAndHashCodeIrBodyGenerator(declaration, pluginContext).processClass()
+    }
+
+    override fun visitSimpleFunction(declaration: IrSimpleFunction) {
+      super.visitSimpleFunction(declaration)
+      toStringGenerator.processSimpleFunction(declaration)
+    }
   }
 }

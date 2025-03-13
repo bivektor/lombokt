@@ -9,7 +9,6 @@ import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
 import org.jetbrains.kotlin.backend.common.lower.irBlockBody
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
-import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.IrBlockBody
@@ -20,24 +19,12 @@ import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.name.Name
 
-class ToStringIrVisitor(
+class ToStringIrBodyGenerator(
   private val pluginContext: IrPluginContext,
   private val messageCollector: MessageCollector
-) : IrVisitorVoid() {
-
-  override fun visitElement(element: IrElement) {
-    when (element) {
-      is IrDeclaration,
-      is IrFile,
-      is IrModuleFragment -> element.acceptChildrenVoid(this)
-    }
-  }
-
-  override fun visitSimpleFunction(declaration: IrSimpleFunction) {
-    if (!declaration.isGeneratedByPluginKey(PluginKeys.ToStringKey)) {
-      return super.visitSimpleFunction(declaration)
-    }
-
+) {
+  fun processSimpleFunction(declaration: IrSimpleFunction) {
+    if (!declaration.isGeneratedByPluginKey(PluginKeys.ToStringKey)) return
     val classDeclaration = declaration.parent
     require(classDeclaration is IrClass) { "Function ${declaration.name} is not a member of a class" }
     val annotation = getAnnotationAttributes(classDeclaration)
