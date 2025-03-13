@@ -1,4 +1,4 @@
-package com.bivektor.lombokt
+package com.bivektor.lombokt.ir
 
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
@@ -16,10 +16,11 @@ class LomboktIrGenerationExtension(private val messageCollector: MessageCollecto
     pluginContext: IrPluginContext
   ) {
     val visitors = listOf(
-      EqualsAndHashCodeIrVisitor(pluginContext, messageCollector),
+      EqualsAndHashCodeIrVisitor(pluginContext),
       ToStringIrVisitor(pluginContext, messageCollector)
     )
 
+    // TODO: Optimize this to visit elements only once for each visitor
     moduleFragment.acceptChildrenVoid(object : IrVisitorVoid() {
       override fun visitElement(element: IrElement) {
         visitors.forEach { element.acceptVoid(it) }
