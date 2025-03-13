@@ -3,12 +3,11 @@ package com.bivektor.lombokt.ir
 import com.bivektor.lombokt.LomboktNames
 import com.bivektor.lombokt.LomboktNames.EQUALS_METHOD_NAME
 import com.bivektor.lombokt.LomboktNames.HASHCODE_METHOD_NAME
-import com.bivektor.lombokt.PluginKeys.EqualsHashCodeKey
+import com.bivektor.lombokt.PluginKeys
 import com.bivektor.lombokt.isGeneratedByPluginKey
 import getConstValueByName
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.irNot
-import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.declarations.impl.IrVariableImpl
@@ -30,83 +29,60 @@ import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.name.Name
 
-class EqualsAndHashCodeIrVisitor(private val pluginContext: IrPluginContext) : IrVisitorVoid() {
+class EqualsAndHashCodeIrBodyGenerator(
+  private val irClass: IrClass, private val pluginContext: IrPluginContext
+) {
+  private val annotationConfig: EqualsAndHashCodeAnnotationConfig? =
+    irClass.getAnnotation(LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME)?.toAnnotationConfig()
 
-  override fun visitElement(element: IrElement) {
-    when (element) {
-      is IrDeclaration,
-      is IrFile,
-      is IrModuleFragment -> element.acceptChildrenVoid(this)
-    }
-  }
+  @OptIn(UnsafeDuringIrConstructionAPI::class)
+  private val primaryConstructorParams =
+    if (annotationConfig != null && irClass.isData) irClass.primaryConstructor!!.valueParameters.map { it.name } else emptyList()
 
-  override fun visitSimpleFunction(declaration: IrSimpleFunction) {
-    val methodName = declaration.name
-    if (!declaration.isGeneratedByPluginKey(EqualsHashCodeKey)) {
-      return super.visitSimpleFunction(declaration)
-    }
+  @OptIn(UnsafeDuringIrConstructionAPI::class)
+  private val propertiesToUse = annotationConfig?.let { annotation ->
+    irClass.properties.filter { it.isIncluded }.toList()
+  } ?: emptyList()
 
-    val parentClass = declaration.parent
-    require(parentClass is IrClass) { "Function ${declaration.name} is not a member of a class" }
-    val annotation = getAnnotationAttributes(parentClass)
-
-    // TODO: LOMBOKT-17 - This method is run twice one for equals, one for hashcode and we collect properties twice. Find a way to optimize it
-    val propertiesToUse = getPropertiesToUse(annotation, parentClass)
-    val functionBuilder =
-      FunctionBuilder(pluginContext, parentClass, declaration, propertiesToUse, annotation)
-    declaration.body = functionBuilder.blockBody {
-      when (methodName) {
-        EQUALS_METHOD_NAME -> functionBuilder.generateEqualsMethodBody()
-        HASHCODE_METHOD_NAME -> functionBuilder.generateHashCodeMethodBody(17)
-        else -> error("Unknown method name: $methodName")
+  private val functionsVisitor = object : IrVisitorVoid() {
+    override fun visitSimpleFunction(declaration: IrSimpleFunction) {
+      if (!declaration.isGeneratedByPluginKey(PluginKeys.EqualsHashCodeKey)) return
+      val methodName = declaration.name
+      val functionBuilder = EqualsAndHashCodeFunctionBuilder(pluginContext, irClass, declaration, propertiesToUse, annotationConfig!!)
+      declaration.body = functionBuilder.blockBody {
+        when (methodName) {
+          EQUALS_METHOD_NAME -> functionBuilder.generateEqualsMethodBody()
+          HASHCODE_METHOD_NAME -> functionBuilder.generateHashCodeMethodBody(17)
+          else -> error("Unknown method name: $methodName")
+        }
       }
     }
   }
 
-  private fun getAnnotationAttributes(klass: IrClass): EqualsAndHashCodeAnnotationConfig {
-    val annotation = klass.annotations.findAnnotation(LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME)
-    require(annotation != null) { "Class ${klass.name} is not annotated with @" + LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME }
-    return parseAnnotationAttributes(annotation)
+  fun processClass() {
+    if (annotationConfig == null) return
+    irClass.acceptChildrenVoid(functionsVisitor)
   }
 
-  @OptIn(UnsafeDuringIrConstructionAPI::class)
-  private fun getPropertiesToUse(
-    annotation: EqualsAndHashCodeAnnotationConfig,
-    parentClass: IrClass
-  ): List<IrProperty> {
-    val constructorProperties = if (parentClass.isData)
-      parentClass.primaryConstructor!!.valueParameters.map { it.name }.toList()
-    else emptyList()
+  private val IrProperty.isIncluded: Boolean
+    get() {
+      if (origin != IrDeclarationOrigin.DEFINED) return false
+      if (backingField == null) return false
+      if (irClass.isData && !primaryConstructorParams.contains(name)) return false
 
-    return parentClass.properties
-      .filter { shouldIncludeProperty(it, parentClass, annotation, constructorProperties.contains(it.name)) }
-      .toList()
-  }
+      val includeMode = when {
+        hasAnnotation(EXCLUDE_ANNOTATION_NAME) -> false
+        hasAnnotation(INCLUDE_ANNOTATION_NAME) -> true
+        else -> null
+      }
 
-  private fun shouldIncludeProperty(
-    property: IrProperty,
-    parentClass: IrClass,
-    annotation: EqualsAndHashCodeAnnotationConfig,
-    isFromConstructor: Boolean
-  ): Boolean {
-    if (property.origin != IrDeclarationOrigin.DEFINED) return false
-    if (property.backingField == null) return false
-    val includeMode = getIncludeMode(property.annotations)
-    if (parentClass.isData && !isFromConstructor) return false
+      return if (annotationConfig!!.onlyExplicitlyIncluded) includeMode == true else includeMode != false
+    }
 
-    return if (annotation.onlyExplicitlyIncluded) includeMode == IncludeMode.INCLUDE else includeMode != IncludeMode.EXCLUDE
-  }
-
-  private fun getIncludeMode(annotations: List<IrConstructorCall>): IncludeMode? {
-    if (annotations.findAnnotation(EXCLUDE_ANNOTATION_NAME) != null) return IncludeMode.EXCLUDE
-    if (annotations.findAnnotation(INCLUDE_ANNOTATION_NAME) != null) return IncludeMode.INCLUDE
-    return null
-  }
-
-  private fun parseAnnotationAttributes(annotation: IrConstructorCall): EqualsAndHashCodeAnnotationConfig {
-    val onlyExplicitlyIncluded = annotation.getConstValueByName("onlyExplicitlyIncluded", false)
-    val callSuper = annotation.getConstValueByName("callSuper", false)
-    val doNotUseGetters = annotation.getConstValueByName("doNotUseGetters", false)
+  private fun IrConstructorCall.toAnnotationConfig(): EqualsAndHashCodeAnnotationConfig {
+    val onlyExplicitlyIncluded = getConstValueByName("onlyExplicitlyIncluded", false)
+    val callSuper = getConstValueByName("callSuper", false)
+    val doNotUseGetters = getConstValueByName("doNotUseGetters", false)
 
     return EqualsAndHashCodeAnnotationConfig(
       onlyExplicitlyIncluded = onlyExplicitlyIncluded,
@@ -114,13 +90,9 @@ class EqualsAndHashCodeIrVisitor(private val pluginContext: IrPluginContext) : I
       doNotUseGetters = doNotUseGetters,
     )
   }
-
-  private enum class IncludeMode {
-    INCLUDE, EXCLUDE
-  }
 }
 
-private class FunctionBuilder(
+private class EqualsAndHashCodeFunctionBuilder(
   context: IrGeneratorContext,
   val irClass: IrClass,
   val irFunction: IrSimpleFunction,
@@ -182,7 +154,7 @@ private class FunctionBuilder(
           hasExtensionReceiver = false,
           origin = IrStatementOrigin.EXCLEQ,
         ).apply<IrCallImpl> {
-          dispatchReceiver = this@FunctionBuilder.irEquals(arg1, arg2, origin = IrStatementOrigin.EXCLEQ)
+          dispatchReceiver = this@EqualsAndHashCodeFunctionBuilder.irEquals(arg1, arg2, origin = IrStatementOrigin.EXCLEQ)
         }
       )
     }
