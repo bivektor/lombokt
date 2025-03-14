@@ -11,6 +11,7 @@ private class LomboktPluginKey(val feature: String) : GeneratedDeclarationKey() 
 object PluginKeys {
   val EqualsHashCodeKey: GeneratedDeclarationKey = LomboktPluginKey("EqualsHashCode")
   val ToStringKey: GeneratedDeclarationKey = LomboktPluginKey("ToString")
+  val BuildableKey: GeneratedDeclarationKey = LomboktPluginKey("Buildable")
 }
 
 fun IrDeclaration.isGeneratedByPluginKey(key: GeneratedDeclarationKey): Boolean = (origin as? IrDeclarationOrigin.GeneratedByPlugin)?.pluginKey == key

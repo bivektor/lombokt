@@ -1,6 +1,8 @@
 package com.bivektor.lombokt.fir
 
 import com.bivektor.lombokt.fir.checkers.LomboktCheckersComponent
+import com.bivektor.lombokt.fir.generators.BuildableGenerator
+import com.bivektor.lombokt.fir.generators.BuildableService
 import com.bivektor.lombokt.fir.generators.EqualsAndHashcodeGenerator
 import com.bivektor.lombokt.fir.generators.ToStringGenerator
 import com.bivektor.lombokt.fir.services.EqualsAndHashCodeService
@@ -14,5 +16,7 @@ class LomboktFirExtensionRegistrar : FirExtensionRegistrar() {
     +::ToStringService
     +::EqualsAndHashCodeService
     +::LomboktCheckersComponent
+    +::BuildableService
+    +::BuildableGenerator
   }
 }
