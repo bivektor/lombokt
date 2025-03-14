@@ -8,6 +8,8 @@ import com.bivektor.lombokt.isGeneratedByPluginKey
 import getConstValueByName
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.irNot
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.declarations.impl.IrVariableImpl
@@ -29,11 +31,15 @@ import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.name.Name
 
+private val ANNOTATION_NAME = LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME
+
 class EqualsAndHashCodeIrBodyGenerator(
-  private val irClass: IrClass, private val pluginContext: IrPluginContext
+  private val irClass: IrClass,
+  private val pluginContext: IrPluginContext,
+  private val messageCollector: MessageCollector,
 ) {
   private val annotationConfig: EqualsAndHashCodeAnnotationConfig? =
-    irClass.getAnnotation(LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME)?.toAnnotationConfig()
+    irClass.getAnnotation(ANNOTATION_NAME)?.toAnnotationConfig()
 
   @OptIn(UnsafeDuringIrConstructionAPI::class)
   private val primaryConstructorParams =
@@ -48,7 +54,8 @@ class EqualsAndHashCodeIrBodyGenerator(
     override fun visitSimpleFunction(declaration: IrSimpleFunction) {
       if (!declaration.isGeneratedByPluginKey(PluginKeys.EqualsHashCodeKey)) return
       val methodName = declaration.name
-      val functionBuilder = EqualsAndHashCodeFunctionBuilder(pluginContext, irClass, declaration, propertiesToUse, annotationConfig!!)
+      val functionBuilder =
+        EqualsAndHashCodeFunctionBuilder(pluginContext, irClass, declaration, propertiesToUse, annotationConfig!!)
       declaration.body = functionBuilder.blockBody {
         when (methodName) {
           EQUALS_METHOD_NAME -> functionBuilder.generateEqualsMethodBody()
@@ -76,18 +83,30 @@ class EqualsAndHashCodeIrBodyGenerator(
         else -> null
       }
 
-      return if (annotationConfig!!.onlyExplicitlyIncluded) includeMode == true else includeMode != false
+      val requireExplicitInclude = annotationConfig!!.onlyExplicitlyIncluded ||
+        (isLateinit && !annotationConfig.includeLateInits)
+
+      val included = if (requireExplicitInclude) includeMode == true else includeMode != false
+      if (isLateinit && !included)
+        messageCollector.report(
+          CompilerMessageSeverity.EXCEPTION,
+          "Lateinit property '$name' on class '${parent.kotlinFqName}' annoted with '$ANNOTATION_NAME' must explicitly be included"
+        )
+
+      return included;
     }
 
   private fun IrConstructorCall.toAnnotationConfig(): EqualsAndHashCodeAnnotationConfig {
     val onlyExplicitlyIncluded = getConstValueByName("onlyExplicitlyIncluded", false)
     val callSuper = getConstValueByName("callSuper", false)
     val doNotUseGetters = getConstValueByName("doNotUseGetters", false)
+    val includeLateInits = getConstValueByName("includeLateInits", false)
 
     return EqualsAndHashCodeAnnotationConfig(
       onlyExplicitlyIncluded = onlyExplicitlyIncluded,
       callSuper = callSuper,
       doNotUseGetters = doNotUseGetters,
+      includeLateInits = includeLateInits,
     )
   }
 }
@@ -154,7 +173,8 @@ private class EqualsAndHashCodeFunctionBuilder(
           hasExtensionReceiver = false,
           origin = IrStatementOrigin.EXCLEQ,
         ).apply<IrCallImpl> {
-          dispatchReceiver = this@EqualsAndHashCodeFunctionBuilder.irEquals(arg1, arg2, origin = IrStatementOrigin.EXCLEQ)
+          dispatchReceiver =
+            this@EqualsAndHashCodeFunctionBuilder.irEquals(arg1, arg2, origin = IrStatementOrigin.EXCLEQ)
         }
       )
     }
@@ -308,6 +328,7 @@ private data class EqualsAndHashCodeAnnotationConfig(
   val onlyExplicitlyIncluded: Boolean,
   val callSuper: Boolean,
   val doNotUseGetters: Boolean,
+  val includeLateInits: Boolean
 )
 
 private val INCLUDE_ANNOTATION_NAME = LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME.child(Name.identifier("Include"))

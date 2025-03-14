@@ -5,7 +5,8 @@ package lombokt
 annotation class EqualsAndHashCode(
   val onlyExplicitlyIncluded: Boolean = false,
   val callSuper: Boolean = false,
-  val doNotUseGetters: Boolean = false
+  val doNotUseGetters: Boolean = false,
+  val includeLateInits: Boolean = false
 ) {
 
   @Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)

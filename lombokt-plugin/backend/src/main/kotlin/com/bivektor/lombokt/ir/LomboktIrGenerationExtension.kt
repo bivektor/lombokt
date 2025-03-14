@@ -21,7 +21,7 @@ class LomboktIrGenerationExtension(private val messageCollector: MessageCollecto
 
   private class LomboktIrTransformer(
     private val pluginContext: IrPluginContext,
-    messageCollector: MessageCollector
+    private val messageCollector: MessageCollector
   ) : IrVisitorVoid() {
 
     private val toStringGenerator = ToStringIrBodyGenerator(pluginContext, messageCollector)
@@ -36,7 +36,7 @@ class LomboktIrGenerationExtension(private val messageCollector: MessageCollecto
 
     override fun visitClass(declaration: IrClass) {
       super.visitClass(declaration)
-      EqualsAndHashCodeIrBodyGenerator(declaration, pluginContext).processClass()
+      EqualsAndHashCodeIrBodyGenerator(declaration, pluginContext, messageCollector).processClass()
     }
 
     override fun visitSimpleFunction(declaration: IrSimpleFunction) {
