@@ -145,7 +145,7 @@ thus, method declarations must be present in the user code.
 ```Kotlin
 
   @Buildable
-  class Person private constructor(
+  class Person(
 
     // Required parameter
     val name: String,
@@ -195,6 +195,7 @@ thus, method declarations must be present in the user code.
 * Builder class cannot have extra property or method declarations
 * Annotations can be placed on just regular classes, no objects, interfaces or other class types
 * User defined method bodies are dummy placeholders and, they are always overwritten by the compiler
+* Constructor doesn't have to be public, as buildable classes often prefer private constructors
 
 ## Contributing
 
