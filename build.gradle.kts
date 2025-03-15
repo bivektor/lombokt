@@ -1,4 +1,6 @@
 import io.deepmedia.tools.deployer.DeployerExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmExtension
+import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 
 plugins {
   kotlin("jvm") apply false
@@ -31,6 +33,12 @@ subprojects {
     return@subprojects
 
   apply(plugin = "io.deepmedia.tools.deployer")
+
+  the<KotlinJvmExtension>().apply {
+    compilerOptions {
+      extraWarnings = true
+    }
+  }
 
   the<DeployerExtension>().apply {
     projectInfo {

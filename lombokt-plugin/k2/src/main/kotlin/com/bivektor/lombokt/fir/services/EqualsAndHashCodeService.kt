@@ -30,8 +30,6 @@ import com.bivektor.lombokt.LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME as ANNO
 
 private val annotationClassId = ClassId.topLevel(ANNOTATION_NAME)
 private val includeAnnotationClassId = annotationClassId.createNestedClassId(Name.identifier("Include"))
-private val excludeAnnotationClassId = annotationClassId.createNestedClassId(Name.identifier("Exclude"))
-
 private val annotationSimpleName = ANNOTATION_NAME.shortName()
 
 class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingService(session, ANNOTATION_NAME) {
