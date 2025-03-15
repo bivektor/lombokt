@@ -82,7 +82,7 @@ object BuildableIrBodyGenerator {
             +irIfThen(
               irIsPropertyNotSet(irThis(), parameter),
               irThrow(irCall(context.irBuiltIns.illegalArgumentExceptionSymbol).apply {
-                putValueArgument(0, irString("${parameter.name} is required but was not set"))
+                putValueArgument(0, irString("'${parameter.name}' is required but was not set"))
               })
             )
           }
