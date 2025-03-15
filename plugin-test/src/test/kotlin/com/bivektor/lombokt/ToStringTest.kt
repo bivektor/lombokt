@@ -209,7 +209,7 @@ class ToStringTest {
   @Test
   fun testLateInitProperty() {
     val v = LateInitProperty()
-    assertEquals("LateInitProperty(name=<uninitialized>)", v.toString())
+    assertEquals("LateInitProperty(name=null)", v.toString())
     v.name = "John"
     assertEquals("LateInitProperty(name=John)", v.toString())
   }

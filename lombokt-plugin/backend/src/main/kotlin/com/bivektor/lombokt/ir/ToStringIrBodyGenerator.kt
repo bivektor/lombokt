@@ -17,8 +17,6 @@ import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.name.Name
 
-private const val UNINITIALIZED = "<uninitialized>"
-
 class ToStringIrBodyGenerator(
   private val pluginContext: IrPluginContext,
   private val messageCollector: MessageCollector
@@ -91,11 +89,10 @@ class ToStringIrBodyGenerator(
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun irGetProperty(property: IrProperty, doNotUseGetter: Boolean): IrExpression {
       with(property) {
-        if (doNotUseGetter && backingField != null)
+        if (isLateinit || (doNotUseGetter && backingField != null))
           return irGetThisField(backingField!!)
 
-        if (!isLateinit) return irGetThisProperty(property)
-        return irGetThisLateInitProperty(property, irString(UNINITIALIZED))
+        return irGetThisProperty(this)
       }
     }
 

@@ -24,17 +24,6 @@ abstract class AbstractClassFunctionBlockBodyBuilder(
     )
   }
 
-  protected fun irGetThisLateInitProperty(property: IrProperty, nullExpression: IrExpression): IrExpression {
-    with(property) {
-      return irIfNull(
-        backingField!!.type,
-        irGetThisField(backingField!!),
-        nullExpression,
-        irGetThisProperty(this)
-      )
-    }
-  }
-
   protected fun irGetThisProperty(property: IrProperty) = with(property) {
     irCall(getter!!).apply {
       dispatchReceiver = irThis()
