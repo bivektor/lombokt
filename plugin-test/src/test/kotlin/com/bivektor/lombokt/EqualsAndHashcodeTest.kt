@@ -1,7 +1,6 @@
 package com.bivektor.lombokt
 
 import lombokt.EqualsAndHashCode
-import org.junit.jupiter.api.Nested
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
