@@ -5,14 +5,12 @@ import com.bivektor.lombokt.PluginKeys
 import com.bivektor.lombokt.isGeneratedByPluginKey
 import getConstValueByName
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
-import org.jetbrains.kotlin.backend.common.lower.irBlockBody
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.declarations.*
-import org.jetbrains.kotlin.ir.expressions.IrBlockBody
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
+import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
@@ -28,97 +26,87 @@ class ToStringIrBodyGenerator(
     val classDeclaration = declaration.parent
     require(classDeclaration is IrClass) { "Function ${declaration.name} is not a member of a class" }
     val annotation = getAnnotationAttributes(classDeclaration)
-    declaration.body = generateMethodBody(declaration, annotation)
+    declaration.body = ToStringFunctionBodyBuilder(declaration, annotation).let { builder ->
+      builder.blockBody {
+        builder.generateMethodBody()
+      }
+    }
   }
 
-  private fun generateMethodBody(
-    fn: IrSimpleFunction,
-    annotation: AnnotationConfig
-  ): IrBlockBody {
-    val parentClass = fn.parentAsClass
-    return DeclarationIrBuilder(pluginContext, fn.symbol).irBlockBody(fn) {
-      val thisRef = irGet(fn.dispatchReceiverParameter!!)
+  private inner class ToStringFunctionBodyBuilder(
+    private val irFunction: IrSimpleFunction,
+    private val annotation: AnnotationConfig,
+  ) : AbstractClassFunctionBlockBodyBuilder (
+    irFunction,
+    pluginContext,
+    Scope(irFunction.symbol),
+    SYNTHETIC_OFFSET,
+    SYNTHETIC_OFFSET
+  ) {
+
+    private val parentClass = irFunction.parentAsClass
+
+    fun generateMethodBody() {
       val result = irConcat()
       result.arguments.add(irString(parentClass.name.asString() + "("))
 
+      var isFirstArgument = true
       if (annotation.callSuper) {
-        val superFn = resolveSuperFunction(fn)
+        val superFn = resolveSuperFunction(irFunction)
         result.arguments.add(irString("super="))
         result.arguments.add(
           irCall(superFn.symbol).apply {
-            dispatchReceiver = thisRef
+            dispatchReceiver = irThis()
             superQualifierSymbol = superFn.parentAsClass.symbol
           })
 
-        result.arguments.add(irString(", "))
+        isFirstArgument = false
       }
 
-      var hasIncludedField = false
       parentClass.acceptChildrenVoid(object : IrVisitorVoid() {
-
         override fun visitProperty(declaration: IrProperty) {
           if (declaration.origin != IrDeclarationOrigin.Companion.DEFINED) return
-          val getter = declaration.getter ?: return
+          if (declaration.getter == null) return
           val hasBackingField = declaration.backingField != null
 
           val config = getPropertyConfig(declaration)
           if (!config.isIncluded(annotation, !hasBackingField)) return
 
-          if (annotation.doNotUseGetters && hasBackingField) {
-            handleField(declaration.backingField!!, config)
-            return
-          }
+          if (!isFirstArgument) result.arguments.add(irString(", "))
+          isFirstArgument = false
 
-          hasIncludedField = true
           val outputName = config?.customName ?: declaration.name.asString()
           result.arguments.add(irString("$outputName="))
-          result.arguments.add(irCall(getter.symbol).apply {
-            dispatchReceiver = thisRef
-          })
-
-          result.arguments.add(irString(", "))
-        }
-
-        override fun visitField(declaration: IrField) {
-          // Property fields are handled by visitProperty
-          if (declaration.isPropertyField) return
-          val config = getElementConfig(declaration.annotations)
-          if (!config.isIncluded(annotation)) return
-          handleField(declaration, config)
-        }
-
-        private fun handleField(declaration: IrField, config: ElementConfig?) {
-          hasIncludedField = true
-          val outputName = config?.customName ?: declaration.name.asString()
-          result.arguments.add(irString("$outputName="))
-          result.arguments.add(irGetField(thisRef, declaration))
-          result.arguments.add(irString(", "))
+          result.arguments.add(irGetProperty(declaration, annotation.doNotUseGetters))
         }
       })
 
-      if (hasIncludedField) {
-        result.arguments.removeAt(result.arguments.size - 1)
-      }
-
       result.arguments.add(irString(")"))
+
       +irReturn(result)
     }
-  }
 
-  @OptIn(UnsafeDuringIrConstructionAPI::class)
-  private fun resolveSuperFunction(fn: IrSimpleFunction): IrSimpleFunction {
-    val parentClass = fn.parentAsClass
-    if (parentClass.superClass == null)
-      messageCollector.report(
-        CompilerMessageSeverity.WARNING,
-        "ToString on ${parentClass.kotlinFqName} requires super call but the class has no super class"
-      )
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    private fun irGetProperty(property: IrProperty, doNotUseGetter: Boolean): IrExpression = property.run {
+      if (doNotUseGetter && backingField != null) return irGetThisField(backingField!!)
+      return irGetThisProperty(this)
+    }
 
-    return (parentClass.superClass ?: pluginContext.irBuiltIns.anyClass.owner)
-      .functions
-      .singleOrNull {
-        it.name == LomboktNames.TO_STRING_METHOD_NAME && it.valueParameters.isEmpty()
-      }!!
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    private fun resolveSuperFunction(fn: IrSimpleFunction): IrSimpleFunction {
+      val parentClass = fn.parentAsClass
+      if (parentClass.superClass == null)
+        messageCollector.report(
+          CompilerMessageSeverity.WARNING,
+          "ToString on ${parentClass.kotlinFqName} requires super call but the class has no super class"
+        )
+
+      return (parentClass.superClass ?: pluginContext.irBuiltIns.anyClass.owner)
+        .functions
+        .singleOrNull {
+          it.name == LomboktNames.TO_STRING_METHOD_NAME && it.valueParameters.isEmpty()
+        }!!
+    }
   }
 
   private fun getAnnotationAttributes(klass: IrClass): AnnotationConfig {

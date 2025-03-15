@@ -71,6 +71,10 @@ Access is through getters by default but that can be configured as shown below.
 For data classes, only properties from the primary constructor are considered.
 For non-data classes, all properties including the ones declared in the class body are included by default.
 
+Note that, similar to how data classes work, Lombokt just calls `equals` and `hashcode` methods on the property values. 
+That's why arrays don't work as expected because of how these methods are defined in the `Array` class.
+Lombok handles this case for Java classes but neither Lombokt nor Kotlin data classes have such a special handling, thus one needs to use `List` or similar collection
+
 ```kotlin
 import lombokt.EqualsAndHashCode
 

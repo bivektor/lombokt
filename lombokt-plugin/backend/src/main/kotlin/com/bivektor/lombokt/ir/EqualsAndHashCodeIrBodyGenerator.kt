@@ -8,6 +8,8 @@ import com.bivektor.lombokt.isGeneratedByPluginKey
 import getConstValueByName
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.irNot
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.declarations.impl.IrVariableImpl
@@ -29,11 +31,15 @@ import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.name.Name
 
+private val ANNOTATION_NAME = LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME
+
 class EqualsAndHashCodeIrBodyGenerator(
-  private val irClass: IrClass, private val pluginContext: IrPluginContext
+  private val irClass: IrClass,
+  private val pluginContext: IrPluginContext,
+  private val messageCollector: MessageCollector,
 ) {
   private val annotationConfig: EqualsAndHashCodeAnnotationConfig? =
-    irClass.getAnnotation(LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME)?.toAnnotationConfig()
+    irClass.getAnnotation(ANNOTATION_NAME)?.toAnnotationConfig()
 
   @OptIn(UnsafeDuringIrConstructionAPI::class)
   private val primaryConstructorParams =
@@ -48,7 +54,8 @@ class EqualsAndHashCodeIrBodyGenerator(
     override fun visitSimpleFunction(declaration: IrSimpleFunction) {
       if (!declaration.isGeneratedByPluginKey(PluginKeys.EqualsHashCodeKey)) return
       val methodName = declaration.name
-      val functionBuilder = EqualsAndHashCodeFunctionBuilder(pluginContext, irClass, declaration, propertiesToUse, annotationConfig!!)
+      val functionBuilder =
+        EqualsAndHashCodeFunctionBuilder(pluginContext, irClass, declaration, propertiesToUse, annotationConfig!!)
       declaration.body = functionBuilder.blockBody {
         when (methodName) {
           EQUALS_METHOD_NAME -> functionBuilder.generateEqualsMethodBody()
@@ -67,16 +74,20 @@ class EqualsAndHashCodeIrBodyGenerator(
   private val IrProperty.isIncluded: Boolean
     get() {
       if (origin != IrDeclarationOrigin.DEFINED) return false
-      if (backingField == null) return false
-      if (irClass.isData && !primaryConstructorParams.contains(name)) return false
+      val isEligible = backingField != null && !(irClass.isData && !primaryConstructorParams.contains(name))
 
-      val includeMode = when {
-        hasAnnotation(EXCLUDE_ANNOTATION_NAME) -> false
-        hasAnnotation(INCLUDE_ANNOTATION_NAME) -> true
-        else -> null
-      }
+      if (hasAnnotation(EXCLUDE_ANNOTATION_NAME)) return false
 
-      return if (annotationConfig!!.onlyExplicitlyIncluded) includeMode == true else includeMode != false
+      val explicitlyIncluded = hasAnnotation(INCLUDE_ANNOTATION_NAME)
+      if (explicitlyIncluded && !isEligible)
+        messageCollector.report(
+          CompilerMessageSeverity.EXCEPTION,
+          "Property '$name' on class '${parent.kotlinFqName}' cannot be used for equals/hashCode generation"
+        )
+
+      if (!isEligible) return false
+      if (explicitlyIncluded) return true
+      return !annotationConfig!!.onlyExplicitlyIncluded
     }
 
   private fun IrConstructorCall.toAnnotationConfig(): EqualsAndHashCodeAnnotationConfig {
@@ -100,16 +111,7 @@ private class EqualsAndHashCodeFunctionBuilder(
   val config: EqualsAndHashCodeAnnotationConfig,
   startOffset: Int = SYNTHETIC_OFFSET,
   endOffset: Int = SYNTHETIC_OFFSET,
-) : IrBlockBodyBuilder(context, Scope(irFunction.symbol), startOffset, endOffset) {
-
-  private fun irThis(): IrExpression {
-    val irDispatchReceiverParameter = irFunction.dispatchReceiverParameter!!
-    return IrGetValueImpl(
-      startOffset, endOffset,
-      irDispatchReceiverParameter.type,
-      irDispatchReceiverParameter.symbol
-    )
-  }
+) : AbstractClassFunctionBlockBodyBuilder(irFunction, context, Scope(irFunction.symbol), startOffset, endOffset) {
 
   private fun irOther(): IrExpression {
     val irFirstParameter = irFunction.valueParameters[0]
@@ -154,7 +156,8 @@ private class EqualsAndHashCodeFunctionBuilder(
           hasExtensionReceiver = false,
           origin = IrStatementOrigin.EXCLEQ,
         ).apply<IrCallImpl> {
-          dispatchReceiver = this@EqualsAndHashCodeFunctionBuilder.irEquals(arg1, arg2, origin = IrStatementOrigin.EXCLEQ)
+          dispatchReceiver =
+            this@EqualsAndHashCodeFunctionBuilder.irEquals(arg1, arg2, origin = IrStatementOrigin.EXCLEQ)
         }
       )
     }
@@ -217,13 +220,8 @@ private class EqualsAndHashCodeFunctionBuilder(
     property: IrProperty,
     doNotUseGetter: Boolean,
   ): IrExpression {
-    if (doNotUseGetter) {
-      return irGetField(receiver, property.backingField!!)
-    }
-
-    return irCall(property.getter!!).apply {
-      dispatchReceiver = receiver
-    }
+    if (doNotUseGetter) return irGetField(receiver, property.backingField!!)
+    return irGetProperty(receiver, property)
   }
 
   private fun IrBuilderWithScope.shiftResultOfHashCode(irResultVar: IrVariable): IrExpression =
@@ -251,7 +249,7 @@ private class EqualsAndHashCodeFunctionBuilder(
 
   private fun getHashCodeOfProperty(property: IrProperty, doNotUseGetter: Boolean): IrExpression {
     return when {
-      property.backingField!!.type.isNullable() ->
+      property.isLateinit || property.backingField!!.type.isNullable() ->
         irIfNull(
           context.irBuiltIns.intType,
           irGetProperty(irThis(), property, doNotUseGetter),
@@ -307,7 +305,7 @@ private class EqualsAndHashCodeFunctionBuilder(
 private data class EqualsAndHashCodeAnnotationConfig(
   val onlyExplicitlyIncluded: Boolean,
   val callSuper: Boolean,
-  val doNotUseGetters: Boolean,
+  val doNotUseGetters: Boolean
 )
 
 private val INCLUDE_ANNOTATION_NAME = LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME.child(Name.identifier("Include"))

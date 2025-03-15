@@ -205,6 +205,29 @@ class EqualsAndHashcodeTest {
     assertNotEquals(explicit1, explicit3)
     assertNotEquals(explicit1.hashCode(), explicit3.hashCode())
   }
+
+  @EqualsAndHashCode
+  private class LateInitsIncluded {
+    lateinit var name: String
+  }
+
+  @Test
+  fun testLateInitsIncluded() {
+    val v1 = LateInitsIncluded()
+    val v2 = LateInitsIncluded()
+    val v3 = LateInitsIncluded().apply { name = "a" }
+    val v4 = LateInitsIncluded().apply { name = "a" }
+    val v5 = LateInitsIncluded().apply { name = "b" }
+    assertEquals(calculateHashCode(0), v1.hashCode())
+    assertEquals(v1, v2)
+    assertNotEquals(v1, v3)
+    assertNotEquals(v1.hashCode(), v3.hashCode())
+    assertNotEquals(v1, v4)
+    assertNotEquals(v1.hashCode(), v4.hashCode())
+    assertNotEquals(v3, v5)
+    assertNotEquals(v3.hashCode(), v5.hashCode())
+    assertEquals(v3.hashCode(), calculateHashCode("a"))
+  }
 }
 
 private fun calculateHashCode(vararg values: Any?): Int {
