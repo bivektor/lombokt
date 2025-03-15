@@ -24,6 +24,18 @@ abstract class AbstractClassFunctionBlockBodyBuilder(
     )
   }
 
+  protected fun irGetThisLateInitProperty(property: IrProperty, nullExpression: IrExpression): IrExpression {
+    // This is what ::isInitialized actually outputs in JVM. Instead of resolving and calling that extension function, we just mimic it
+    with(property) {
+      return irIfNull(
+        backingField!!.type,
+        irGetThisField(backingField!!),
+        nullExpression,
+        irGetThisProperty(this)
+      )
+    }
+  }
+
   protected fun irGetThisProperty(property: IrProperty) = with(property) {
     irCall(getter!!).apply {
       dispatchReceiver = irThis()
