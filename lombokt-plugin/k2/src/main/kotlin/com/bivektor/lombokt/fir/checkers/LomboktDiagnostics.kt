@@ -12,4 +12,5 @@ object LomboktDiagnostics {
   val BUILDABLE_INVALID_PRIMARY_CONSTRUCTOR by error1<PsiElement, String>()
   val BUILDER_MISSING_METHOD by error1<PsiElement, String>()
   val BUILDER_INVALID_METHOD_SIGNATURE by error1<PsiElement, String>()
+  val BUILDABLE_MISSING_BUILDER by error1<PsiElement, String>()
 }

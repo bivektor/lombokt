@@ -1,8 +1,10 @@
 package com.bivektor.lombokt.fir.checkers
 
 import com.bivektor.lombokt.LomboktNames.BUILDABLE_ANNOTATION_ID
+import com.bivektor.lombokt.LomboktNames.BUILDER_ANNOTATION_ID
 import com.bivektor.lombokt.LomboktNames.BUILDER_BUILD_METHOD_NAME
 import com.bivektor.lombokt.fir.checkers.LomboktDiagnostics.BUILDER_INVALID_METHOD_SIGNATURE
+import com.bivektor.lombokt.fir.services.BuildableService
 import com.bivektor.lombokt.fir.services.buildableService
 import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
@@ -21,6 +23,7 @@ import org.jetbrains.kotlin.name.Name
 object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
 
   private val buildableAnnotationText = "@${BUILDABLE_ANNOTATION_ID.shortClassName}"
+  private val builderAnnotationText = "@${BUILDER_ANNOTATION_ID.shortClassName}"
 
   @OptIn(SymbolInternals::class)
   override fun check(
@@ -30,44 +33,67 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
   ) {
     val session = context.session
     val service = session.buildableService
-    if (!service.isBuildableBuilderClass(declaration.symbol)) return
+    if (service.isBuilderClass(declaration.symbol)) {
+      val containingClass = declaration.getContainingDeclaration(session) as? FirClass
+      val buildableAnnotation = containingClass?.getAnnotationByClassId(BUILDABLE_ANNOTATION_ID, session)
 
-    val containingClass = declaration.getContainingDeclaration(session) as? FirClass
+      if (buildableAnnotation == null) {
+        return reporter.reportOn(
+          declaration.source,
+          LomboktDiagnostics.BUILDER_INVALID_LOCATION,
+          "Builder class must have a parent class annotated with $buildableAnnotationText",
+          context
+        )
+      }
 
-    val buildableAnnotation = containingClass?.getAnnotationByClassId(BUILDABLE_ANNOTATION_ID, session)
-
-    if (buildableAnnotation == null) {
-      return reporter.reportOn(
-        declaration.source,
-        LomboktDiagnostics.BUILDER_INVALID_LOCATION,
-        "Builder class must have a parent class annotated with '$buildableAnnotationText'",
-        context
-      )
+      return checkBuilderClass(service, declaration, containingClass, context, reporter)
     }
 
-    if (!service.isSuitableBuilderClassType(declaration.symbol)) {
+    if (service.isBuildableClass(declaration.symbol)) {
+      val builderClass = declaration.declarations.filterIsInstance<FirClass>().find { service.isBuilderClass(it.symbol) }
+      if (builderClass == null)
+        return reporter.reportOn(
+          declaration.source,
+          LomboktDiagnostics.BUILDABLE_MISSING_BUILDER,
+          "$buildableAnnotationText class must have a nested builder class annotated with $builderAnnotationText",
+          context
+        )
+
+      return checkBuilderClass(service, builderClass, declaration, context, reporter)
+    }
+  }
+
+  private fun checkBuilderClass(
+    service: BuildableService,
+    builderClass: FirClass,
+    buildableClass: FirClass,
+    context: CheckerContext,
+    reporter: DiagnosticReporter
+  ) {
+    val session = context.session
+    if (!service.isSuitableBuilderClassType(builderClass.symbol)) {
       return reporter.reportOn(
-        declaration.source,
+        builderClass.source,
         LomboktDiagnostics.UNSUPPORTED_CLASS_TYPE,
         "Builder class must be a regular class, not an object, interface, inner, inline, value or enum class.",
         context
       )
     }
 
-    if (!service.isSuitableBuildableClassType(containingClass.symbol)) {
+    if (!service.isSuitableBuildableClassType(buildableClass.symbol)) {
       return reporter.reportOn(
-        containingClass.source,
+        buildableClass.source,
         LomboktDiagnostics.UNSUPPORTED_CLASS_TYPE,
         "Buildable class must be a regular class, not an object, interface, inner, inline, value or enum class.",
         context
       )
     }
 
-    val constructor = containingClass.primaryConstructorIfAny(session)
+    val constructor = buildableClass.primaryConstructorIfAny(session)
 
     if (constructor == null) {
       reporter.reportOn(
-        containingClass.source,
+        buildableClass.source,
         LomboktDiagnostics.BUILDABLE_INVALID_PRIMARY_CONSTRUCTOR,
         "Buildable class must have a primary constructor with at least one property",
         context
@@ -76,7 +102,7 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
     }
 
     val constructorParams = constructor.valueParameterSymbols.associateBy { it.name }
-    val builderMethods = declaration.declarations.filterIsInstance<FirSimpleFunction>()
+    val builderMethods = builderClass.declarations.filterIsInstance<FirSimpleFunction>()
       .filter { constructorParams.contains(it.name) || it.name == BUILDER_BUILD_METHOD_NAME }
       .associateBy { it.name }
 
@@ -84,18 +110,18 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
       val builderMethod = builderMethods[param.name]
       if (builderMethod == null)
         reporter.reportOn(
-          declaration.source,
+          builderClass.source,
           LomboktDiagnostics.BUILDER_MISSING_METHOD,
           "Builder class must have a method for each constructor parameter but '${param.name}' is missing",
           context
         )
       else
-        checkBuilderMethod(declaration, param, builderMethod, context, reporter)
+        checkBuilderMethod(builderClass, param, builderMethod, context, reporter)
     }
 
-    checkBuilderBuildMethod(declaration, containingClass, builderMethods, reporter, context)
+    checkBuilderBuildMethod(builderClass, buildableClass, builderMethods, reporter, context)
 
-    for (child in declaration.declarations) {
+    for (child in builderClass.declarations) {
       if (child !is FirProperty && child !is FirSimpleFunction) continue
       if (child is FirSimpleFunction && (child.name == BUILDER_BUILD_METHOD_NAME || builderMethods.contains(child.name))) continue
       return reporter.reportOn(

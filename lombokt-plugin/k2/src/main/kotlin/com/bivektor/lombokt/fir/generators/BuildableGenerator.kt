@@ -31,7 +31,7 @@ class BuildableGenerator(session: FirSession) : FirDeclarationGenerationExtensio
   override fun getCallableNamesForClass(classSymbol: FirClassSymbol<*>, context: MemberGenerationContext): Set<Name> {
     // All these checks are necessary because even FIR declaration checker fails, our generator methods below may still run causing unexpected errors
     if (!buildableService.isSuitableBuilderClassType(classSymbol)) return emptySet()
-    if (!buildableService.isBuildableBuilderClass(classSymbol)) return emptySet()
+    if (!buildableService.isBuilderClass(classSymbol)) return emptySet()
     if (!buildableService.isSuitableBuildableClassType(classSymbol.getContainingClassSymbol() as FirClassSymbol<*>)) return emptySet()
     return setOf(builderPropertiesCallableName)
   }
