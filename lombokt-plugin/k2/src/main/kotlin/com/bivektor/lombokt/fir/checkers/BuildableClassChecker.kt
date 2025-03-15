@@ -1,7 +1,7 @@
 package com.bivektor.lombokt.fir.checkers
 
 import com.bivektor.lombokt.LomboktNames.BUILDABLE_ANNOTATION_ID
-import com.bivektor.lombokt.LomboktNames.BUILDABLE_BUILD_METHOD_NAME
+import com.bivektor.lombokt.LomboktNames.BUILDER_BUILD_METHOD_NAME
 import com.bivektor.lombokt.fir.checkers.LomboktDiagnostics.BUILDER_INVALID_METHOD_SIGNATURE
 import com.bivektor.lombokt.fir.services.buildableService
 import org.jetbrains.kotlin.KtSourceElement
@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.resolve.defaultType
 import org.jetbrains.kotlin.fir.resolve.getContainingDeclaration
+import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.FirValueParameterSymbol
 import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.name.Name
@@ -21,6 +22,7 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
 
   private val buildableAnnotationText = "@${BUILDABLE_ANNOTATION_ID.shortClassName}"
 
+  @OptIn(SymbolInternals::class)
   override fun check(
     declaration: FirClass,
     context: CheckerContext,
@@ -62,6 +64,7 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
     }
 
     val constructor = containingClass.primaryConstructorIfAny(session)
+
     if (constructor == null) {
       reporter.reportOn(
         containingClass.source,
@@ -72,22 +75,10 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
       return
     }
 
-    val properties = containingClass.declarations.filterIsInstance<FirProperty>().filter { it.backingField != null }
-      .associateBy { it.name }
-
     val constructorParams = constructor.valueParameterSymbols.associateBy { it.name }
-
-    if (constructorParams.keys.any { !properties.containsKey(it) }) {
-      reporter.reportOn(
-        containingClass.source,
-        LomboktDiagnostics.BUILDABLE_INVALID_PRIMARY_CONSTRUCTOR,
-        "All parameters of a Buildable class constructor must be properties",
-        context
-      )
-      return
-    }
-
-    val builderMethods = declaration.declarations.filterIsInstance<FirSimpleFunction>().associateBy { it.name }
+    val builderMethods = declaration.declarations.filterIsInstance<FirSimpleFunction>()
+      .filter { constructorParams.contains(it.name) || it.name == BUILDER_BUILD_METHOD_NAME }
+      .associateBy { it.name }
 
     constructorParams.values.forEach { param ->
       val builderMethod = builderMethods[param.name]
@@ -103,6 +94,17 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
     }
 
     checkBuilderBuildMethod(declaration, containingClass, builderMethods, reporter, context)
+
+    for (child in declaration.declarations) {
+      if (child !is FirProperty && child !is FirSimpleFunction) continue
+      if (child is FirSimpleFunction && (child.name == BUILDER_BUILD_METHOD_NAME || builderMethods.contains(child.name))) continue
+      return reporter.reportOn(
+        child.source,
+        LomboktDiagnostics.UNSUPPORTED_CLASS_TYPE,
+        "Builder class must not have any other members than the property setter methods and the '$BUILDER_BUILD_METHOD_NAME' method",
+        context
+      )
+    }
   }
 
   private fun checkBuilderBuildMethod(
@@ -112,7 +114,7 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
     reporter: DiagnosticReporter,
     context: CheckerContext
   ) {
-    val buildMethodName = BUILDABLE_BUILD_METHOD_NAME
+    val buildMethodName = BUILDER_BUILD_METHOD_NAME
     val buildMethod = builderMethods[buildMethodName]
     if (buildMethod == null)
       return reporter.reportOn(

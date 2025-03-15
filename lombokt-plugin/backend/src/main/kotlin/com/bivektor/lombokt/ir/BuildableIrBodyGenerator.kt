@@ -26,7 +26,7 @@ object BuildableIrBodyGenerator {
   }
 
   private fun isBuilderClass(irClass: IrClass): Boolean {
-    return irClass.hasAnnotation(LomboktNames.BUILDABLE_BUILDER_ANNOTATION_NAME)
+    return irClass.hasAnnotation(LomboktNames.BUILDER_ANNOTATION_NAME)
   }
 
   private class Visitor(
@@ -49,7 +49,7 @@ object BuildableIrBodyGenerator {
     override fun visitSimpleFunction(declaration: IrSimpleFunction) {
       val functionName = declaration.name
       val functionBuilder = BuildableFunctionBuilder(declaration)
-      if (functionName == LomboktNames.BUILDABLE_BUILD_METHOD_NAME) {
+      if (functionName == LomboktNames.BUILDER_BUILD_METHOD_NAME) {
         declaration.body = functionBuilder.blockBody { functionBuilder.generateBuildMethodBody() }
         return
       }

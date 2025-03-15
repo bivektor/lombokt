@@ -1,6 +1,6 @@
 package com.bivektor.lombokt.fir.services
 
-import com.bivektor.lombokt.LomboktNames.BUILDABLE_BUILDER_ANNOTATION_ID
+import com.bivektor.lombokt.LomboktNames.BUILDER_ANNOTATION_ID
 import com.bivektor.lombokt.fir.isValueClass
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.fir.FirSession
@@ -19,7 +19,7 @@ class BuildableService(session: FirSession) : FirExtensionSessionComponent(sessi
   private val builderCache: FirCache<FirClassSymbol<*>, Boolean, Nothing?> =
     session.firCachesFactory.createCache { symbol, _ ->
       symbol.hasAnnotation(
-        BUILDABLE_BUILDER_ANNOTATION_ID,
+        BUILDER_ANNOTATION_ID,
         session
       )
     }

@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.fir.types.typeContext
 import org.jetbrains.kotlin.fir.types.withNullability
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 
 
 private val builderPropertiesCallableName = Name.identifier("builderProperties")
@@ -45,18 +46,21 @@ class BuildableGenerator(session: FirSession) : FirDeclarationGenerationExtensio
   private fun generateBuilderProperties(context: MemberGenerationContext): List<FirPropertySymbol> {
     val owner = context.owner
     val containingClass = owner.getContainingClassSymbol() as FirClassSymbol<*>
-    return containingClass.primaryConstructorSymbol(session)!!.valueParameterSymbols.flatMap { param ->
+    return containingClass.primaryConstructorSymbol(session)!!.valueParameterSymbols.mapNotNull { param ->
       generateBuilderPropertiesForParameter(context, param)
-    }
+    }.ifNotEmpty { flatten() } ?: emptyList()
   }
 
   private fun generateBuilderPropertiesForParameter(
     context: MemberGenerationContext,
     param: FirValueParameterSymbol
-  ): Iterable<FirPropertySymbol> {
+  ): Iterable<FirPropertySymbol>? {
     val paramType = param.resolvedReturnType
+    val owner = context.owner
+    if (owner.declarationSymbols.any { it is FirPropertySymbol && it.name == param.name }) return null
+
     val actualProperty = createMemberProperty(
-      context.owner,
+      owner,
       PluginKeys.BuildableKey,
       param.name,
       paramType.withNullability(true, session.typeContext),
@@ -68,7 +72,7 @@ class BuildableGenerator(session: FirSession) : FirDeclarationGenerationExtensio
     if (!paramType.canBeNull(session) || !(param.hasDefaultValue && !param.resolvedDefaultValue!!.isNullLiteral)) return listOf(actualProperty)
 
     val flagProperty = createMemberProperty(
-      context.owner,
+      owner,
       PluginKeys.BuildableKey,
       Name.identifier("${param.name}Set"),
       session.builtinTypes.booleanType.coneType,

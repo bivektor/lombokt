@@ -13,8 +13,8 @@ object LomboktNames {
   val TO_STRING_METHOD_NAME = Name.identifier("toString")
 
   val BUILDABLE_ANNOTATION_NAME = FqName("lombokt.Buildable")
-  val BUILDABLE_BUILDER_ANNOTATION_NAME = BUILDABLE_ANNOTATION_NAME.child(Name.identifier("Builder"))
+  val BUILDER_ANNOTATION_NAME = BUILDABLE_ANNOTATION_NAME.child(Name.identifier("Builder"))
   val BUILDABLE_ANNOTATION_ID = ClassId.topLevel(BUILDABLE_ANNOTATION_NAME)
-  val BUILDABLE_BUILDER_ANNOTATION_ID = BUILDABLE_ANNOTATION_ID.createNestedClassId(Name.identifier("Builder"))
-  val BUILDABLE_BUILD_METHOD_NAME = Name.identifier("build")
+  val BUILDER_ANNOTATION_ID = BUILDABLE_ANNOTATION_ID.createNestedClassId(Name.identifier("Builder"))
+  val BUILDER_BUILD_METHOD_NAME = Name.identifier("build")
 }
