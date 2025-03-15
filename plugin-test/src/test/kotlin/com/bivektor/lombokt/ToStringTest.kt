@@ -200,4 +200,17 @@ class ToStringTest {
   fun shouldSkipWhenSuperMethodFinal() {
     assertEquals("fromSuper", SuperMethodFinal().toString())
   }
+
+  @ToString
+  private class LateInitProperty {
+    lateinit var name: String
+  }
+
+  @Test
+  fun testLateInitProperty() {
+    val v = LateInitProperty()
+    assertEquals("LateInitProperty(name=<uninitialized>)", v.toString())
+    v.name = "John"
+    assertEquals("LateInitProperty(name=John)", v.toString())
+  }
 }
