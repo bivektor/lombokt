@@ -74,26 +74,29 @@ class EqualsAndHashCodeIrBodyGenerator(
   private val IrProperty.isIncluded: Boolean
     get() {
       if (origin != IrDeclarationOrigin.DEFINED) return false
-      if (backingField == null) return false
-      if (irClass.isData && !primaryConstructorParams.contains(name)) return false
+      val isEligible = backingField != null && !(irClass.isData && !primaryConstructorParams.contains(name))
 
-      val includeMode = when {
-        hasAnnotation(EXCLUDE_ANNOTATION_NAME) -> false
-        hasAnnotation(INCLUDE_ANNOTATION_NAME) -> true
-        else -> null
-      }
+      if (hasAnnotation(EXCLUDE_ANNOTATION_NAME)) return false
 
-      val requireExplicitInclude = annotationConfig!!.onlyExplicitlyIncluded ||
-        (isLateinit && !annotationConfig.includeLateInits)
+      val explicitlyIncluded = hasAnnotation(INCLUDE_ANNOTATION_NAME)
+      if (explicitlyIncluded && !isEligible)
+        messageCollector.report(
+          CompilerMessageSeverity.EXCEPTION,
+          "Property '$name' on class '${parent.kotlinFqName}' cannot be used for equals/hashCode generation"
+        )
 
-      val included = if (requireExplicitInclude) includeMode == true else includeMode != false
-      if (isLateinit && !included)
+      if (!isEligible) return false
+      if (explicitlyIncluded) return true
+      if (annotationConfig!!.onlyExplicitlyIncluded) return isLateinit && annotationConfig.includeLateInits
+
+      if (isLateinit && !annotationConfig.includeLateInits) {
         messageCollector.report(
           CompilerMessageSeverity.EXCEPTION,
           "Lateinit property '$name' on class '${parent.kotlinFqName}' annoted with '$ANNOTATION_NAME' must explicitly be included"
         )
+      }
 
-      return included;
+      return true
     }
 
   private fun IrConstructorCall.toAnnotationConfig(): EqualsAndHashCodeAnnotationConfig {
