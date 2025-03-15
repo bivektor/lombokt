@@ -87,29 +87,18 @@ class EqualsAndHashCodeIrBodyGenerator(
 
       if (!isEligible) return false
       if (explicitlyIncluded) return true
-      if (annotationConfig!!.onlyExplicitlyIncluded) return isLateinit && annotationConfig.includeLateInits
-
-      if (isLateinit && !annotationConfig.includeLateInits) {
-        messageCollector.report(
-          CompilerMessageSeverity.EXCEPTION,
-          "Lateinit property '$name' on class '${parent.kotlinFqName}' annoted with '$ANNOTATION_NAME' must explicitly be included"
-        )
-      }
-
-      return true
+      return !annotationConfig!!.onlyExplicitlyIncluded
     }
 
   private fun IrConstructorCall.toAnnotationConfig(): EqualsAndHashCodeAnnotationConfig {
     val onlyExplicitlyIncluded = getConstValueByName("onlyExplicitlyIncluded", false)
     val callSuper = getConstValueByName("callSuper", false)
     val doNotUseGetters = getConstValueByName("doNotUseGetters", false)
-    val includeLateInits = getConstValueByName("includeLateInits", false)
 
     return EqualsAndHashCodeAnnotationConfig(
       onlyExplicitlyIncluded = onlyExplicitlyIncluded,
       callSuper = callSuper,
       doNotUseGetters = doNotUseGetters,
-      includeLateInits = includeLateInits,
     )
   }
 }
@@ -122,16 +111,7 @@ private class EqualsAndHashCodeFunctionBuilder(
   val config: EqualsAndHashCodeAnnotationConfig,
   startOffset: Int = SYNTHETIC_OFFSET,
   endOffset: Int = SYNTHETIC_OFFSET,
-) : IrBlockBodyBuilder(context, Scope(irFunction.symbol), startOffset, endOffset) {
-
-  private fun irThis(): IrExpression {
-    val irDispatchReceiverParameter = irFunction.dispatchReceiverParameter!!
-    return IrGetValueImpl(
-      startOffset, endOffset,
-      irDispatchReceiverParameter.type,
-      irDispatchReceiverParameter.symbol
-    )
-  }
+) : AbstractClassFunctionBlockBodyBuilder(irFunction, context, Scope(irFunction.symbol), startOffset, endOffset) {
 
   private fun irOther(): IrExpression {
     val irFirstParameter = irFunction.valueParameters[0]
@@ -240,13 +220,8 @@ private class EqualsAndHashCodeFunctionBuilder(
     property: IrProperty,
     doNotUseGetter: Boolean,
   ): IrExpression {
-    if (doNotUseGetter) {
-      return irGetField(receiver, property.backingField!!)
-    }
-
-    return irCall(property.getter!!).apply {
-      dispatchReceiver = receiver
-    }
+    if (doNotUseGetter) return irGetField(receiver, property.backingField!!)
+    return irGetProperty(receiver, property)
   }
 
   private fun IrBuilderWithScope.shiftResultOfHashCode(irResultVar: IrVariable): IrExpression =
@@ -274,7 +249,7 @@ private class EqualsAndHashCodeFunctionBuilder(
 
   private fun getHashCodeOfProperty(property: IrProperty, doNotUseGetter: Boolean): IrExpression {
     return when {
-      property.backingField!!.type.isNullable() ->
+      property.isLateinit || property.backingField!!.type.isNullable() ->
         irIfNull(
           context.irBuiltIns.intType,
           irGetProperty(irThis(), property, doNotUseGetter),
@@ -330,8 +305,7 @@ private class EqualsAndHashCodeFunctionBuilder(
 private data class EqualsAndHashCodeAnnotationConfig(
   val onlyExplicitlyIncluded: Boolean,
   val callSuper: Boolean,
-  val doNotUseGetters: Boolean,
-  val includeLateInits: Boolean
+  val doNotUseGetters: Boolean
 )
 
 private val INCLUDE_ANNOTATION_NAME = LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME.child(Name.identifier("Include"))
