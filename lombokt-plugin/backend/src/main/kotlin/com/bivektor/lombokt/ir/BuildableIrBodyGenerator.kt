@@ -77,7 +77,7 @@ object BuildableIrBodyGenerator {
       fun generateSetterBody() {
         +irSetProperty(irThis(), irFunction.name, irGet(irFunction.valueParameters[0]))
         val parameter = constructorArgumentsByName.getValue(irFunction.name)
-        if (parameter.hasDefaultValue() && !parameter.defaultValue!!.expression.isNullConst())
+        if (parameter.hasDefaultValue() && parameter.type.isNullable() && !parameter.defaultValue!!.expression.isNullConst())
           +irSetProperty(irThis(), Name.identifier("${irFunction.name}Set"), irTrue())
 
         +irReturn(irThis())

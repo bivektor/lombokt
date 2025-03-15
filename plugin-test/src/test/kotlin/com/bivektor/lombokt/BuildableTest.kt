@@ -6,17 +6,26 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
+private const val DEFAULT_AGE = 10
+private val DEFAULT_DATA = mapOf("name" to "John")
+
 class BuildableTest {
 
   @Buildable
-  class Person(val name: String, val age: Int? = 10, var email: String? = null) {
+  class Person(
+    val name: String,
+    val age: Int? = DEFAULT_AGE,
+    var email: String? = null,
+    val profile: Map<String, Any> = DEFAULT_DATA
+  ) {
 
     @Buildable.Builder
     class Builder {
       fun name(name: String): Builder = this
       fun age(age: Int?): Builder = this
       fun email(email: String?): Builder = this
-      fun build(): Person = Person("", 0)
+      fun profile(profile: Map<String, Any>): Builder = this
+      fun build(): Person = Person("")
     }
 
     companion object {
@@ -27,18 +36,21 @@ class BuildableTest {
 
   @Test
   fun `build with all arguments`() {
-    val person = Person.builder().name("John").age(25).email("some").build()
+    val profile = mapOf("name" to "Jane")
+    val person = Person.builder().name("John").age(25).email("some").profile(profile).build()
     assertEquals("John", person.name)
     assertEquals(25, person.age)
     assertEquals("some", person.email)
+    assertEquals(profile, person.profile)
   }
 
   @Test
-  fun `build without optional arguments`() {
+  fun `build with required arguments`() {
     val person = Person.builder().name("John").build()
     assertEquals("John", person.name)
     assertEquals(10, person.age)
     assertNull(person.email)
+    assertEquals(DEFAULT_DATA, person.profile)
   }
 
   @Test

@@ -1,18 +1,13 @@
 package com.bivektor.lombokt.fir.generators
 
-import com.bivektor.lombokt.LomboktNames
 import com.bivektor.lombokt.PluginKeys
-import org.jetbrains.kotlin.descriptors.Modality
+import com.bivektor.lombokt.fir.services.BuildableService
+import com.bivektor.lombokt.fir.services.buildableService
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.primaryConstructorSymbol
 import org.jetbrains.kotlin.fir.analysis.checkers.getContainingClassSymbol
-import org.jetbrains.kotlin.fir.caches.FirCache
-import org.jetbrains.kotlin.fir.caches.firCachesFactory
-import org.jetbrains.kotlin.fir.caches.getValue
-import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.extensions.FirDeclarationGenerationExtension
-import org.jetbrains.kotlin.fir.extensions.FirExtensionSessionComponent
 import org.jetbrains.kotlin.fir.extensions.MemberGenerationContext
 import org.jetbrains.kotlin.fir.plugin.createMemberProperty
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
@@ -33,7 +28,10 @@ class BuildableGenerator(session: FirSession) : FirDeclarationGenerationExtensio
   private val buildableService: BuildableService by lazy { session.buildableService }
 
   override fun getCallableNamesForClass(classSymbol: FirClassSymbol<*>, context: MemberGenerationContext): Set<Name> {
+    // All these checks are necessary because even FIR declaration checker fails, our generator methods below may still run causing unexpected errors
+    if (!buildableService.isSuitableBuilderClassType(classSymbol)) return emptySet()
     if (!buildableService.isBuildableBuilderClass(classSymbol)) return emptySet()
+    if (!buildableService.isSuitableBuildableClassType(classSymbol.getContainingClassSymbol() as FirClassSymbol<*>)) return emptySet()
     return setOf(builderPropertiesCallableName)
   }
 
@@ -82,17 +80,3 @@ class BuildableGenerator(session: FirSession) : FirDeclarationGenerationExtensio
     return listOf(actualProperty, flagProperty)
   }
 }
-
-internal class BuildableService(session: FirSession) : FirExtensionSessionComponent(session) {
-  private val builderCache: FirCache<FirClassSymbol<*>, Boolean, Nothing?> =
-    session.firCachesFactory.createCache { symbol, _ ->
-      symbol.hasAnnotation(
-        LomboktNames.BUILDABLE_BUILDER_ANNOTATION_ID,
-        session
-      )
-    }
-
-  fun isBuildableBuilderClass(classSymbol: FirClassSymbol<*>): Boolean = builderCache.getValue(classSymbol)
-}
-
-private val FirSession.buildableService: BuildableService by FirSession.sessionComponentAccessor()
