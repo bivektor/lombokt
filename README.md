@@ -8,6 +8,7 @@ It also supports data classes mainly for excluding specific properties or maybe 
 
 - `@ToString` – Generates a `toString()` method automatically.
 - `@EqualsAndHashCode` – Generates `equals()` and `hashCode()` methods.
+- '@Buildable' - Generates Builder class member bodies
 
 ## Requirements
 
@@ -71,7 +72,7 @@ Access is through getters by default but that can be configured as shown below.
 For data classes, only properties from the primary constructor are considered.
 For non-data classes, all properties including the ones declared in the class body are included by default.
 
-Note that, similar to how data classes work, Lombokt just calls `equals` and `hashcode` methods on the property values. 
+Note that, similar to how data classes work, Lombokt just calls `equals` and `hashcode` methods on the property values.
 That's why arrays don't work as expected because of how these methods are defined in the `Array` class.
 Lombok handles this case for Java classes but neither Lombokt nor Kotlin data classes have such a special handling, thus one needs to use `List` or similar collection
 
@@ -135,6 +136,65 @@ class Car(val model: String) : Vehicle("car")
 
 
 ```
+
+### `@Buildable`
+
+Generates bodies of Builder class methods. Provides basic builder without a separate IDE plugin
+thus, method declarations must be present in the user code.
+
+```Kotlin
+
+  @Buildable
+  class Person private constructor(
+
+    // Required parameter
+    val name: String,
+
+    // Parameter without property
+    prefix: String? = "Dr.",
+
+    // Nullable parameter with non-null default value
+    val age: Int? = 18,
+
+    // Nullable parameter with null as default value
+    var email: String? = null,
+
+    // Parameter with default value of complex type
+    val profile: Map<String, Any> = emptyMap()
+  ) {
+
+    val fullName = "$prefix $name"
+
+    @Buildable.Builder
+    class Builder {
+      fun name(name: String) = this
+      fun age(age: Int?) = this
+      fun email(email: String?) = this
+      fun profile(profile: Map<String, Any>) = this
+      fun prefix(prefix: String?) = this
+      fun build() = Person("")
+    }
+
+    companion object {
+      @JvmStatic
+      fun builder() = Builder()
+    }
+  }
+
+```
+
+```Kotlin
+  val personFull = Person.builder().name("John").prefix("Mr.").age(25).email("some").profile(profile).build()
+  val personWithDefaults = Person.builder().name("John").build()
+```
+
+* Primary constructor with at least one parameter is required.
+* Builder class must have a method for each constructor parameter with same name and type
+* Both `@Buildable` and `@Builder` annotations are required
+* Compilation fails for missing or invalid builder methods
+* Builder class cannot have extra property or method declarations
+* Annotations can be placed on just regular classes, no objects, interfaces or other class types
+* User defined method bodies are dummy placeholders and, they are always overwritten by the compiler
 
 ## Contributing
 
