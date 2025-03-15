@@ -1,6 +1,5 @@
 package com.bivektor.lombokt.fir.services
 
-import com.bivektor.lombokt.LomboktNames.BUILDABLE_ANNOTATION_ID
 import com.bivektor.lombokt.LomboktNames.BUILDABLE_BUILDER_ANNOTATION_ID
 import com.bivektor.lombokt.fir.isValueClass
 import org.jetbrains.kotlin.descriptors.ClassKind
@@ -24,10 +23,6 @@ class BuildableService(session: FirSession) : FirExtensionSessionComponent(sessi
         session
       )
     }
-
-  fun buildableAnnotationId() = BUILDABLE_ANNOTATION_ID
-
-  fun builderAnnotationId() = BUILDABLE_BUILDER_ANNOTATION_ID
 
   fun isBuildableBuilderClass(classSymbol: FirClassSymbol<*>): Boolean = builderCache.getValue(classSymbol)
 
