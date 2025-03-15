@@ -87,15 +87,9 @@ class ToStringIrBodyGenerator(
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
-    private fun irGetProperty(property: IrProperty, doNotUseGetter: Boolean): IrExpression {
-      with(property) {
-        if (doNotUseGetter && backingField != null)
-          return irGetThisField(backingField!!)
-
-        if (isLateinit) return irGetThisLateInitProperty(property, irNull())
-
-        return irGetThisProperty(this)
-      }
+    private fun irGetProperty(property: IrProperty, doNotUseGetter: Boolean): IrExpression = property.run {
+      if (doNotUseGetter && backingField != null) return irGetThisField(backingField!!)
+      return irGetThisProperty(this)
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
