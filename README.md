@@ -203,7 +203,7 @@ through the Builder.
 * Both `@Buildable` and `@Builder` annotations are required
 * Compilation fails for missing or invalid builder methods
 * Builder class cannot have extra property or method declarations
-* Annotations can be placed on just regular classes, no objects, interfaces or other class types
+* Annotations can be placed on just regular classes including data classes but not on objects, interfaces, inline, local, enum and value classes
 * User defined method bodies are dummy placeholders and, they are always overwritten by the compiler
 * Constructor doesn't have to be public, as buildable classes often prefer private constructors
 * Companion builder method is optional as the plugin doesn't check or validate Companion object methods
