@@ -22,8 +22,8 @@ Add the dependency to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    compileOnly("com.bivektor.lombokt:lombok-api:3.0.0-beta.1")
-    kotlinCompilerPluginClasspath("com.bivektor.lombokt:lombokt-plugin:3.0.0-beta.1")
+    compileOnly("com.bivektor.lombokt:lombok-api:3.0.0-beta.2")
+    kotlinCompilerPluginClasspath("com.bivektor.lombokt:lombokt-plugin:3.0.0-beta.2")
 }
 ```
 
@@ -143,12 +143,12 @@ Generates bodies of Builder class methods. Provides basic builder without a sepa
 thus, method declarations must be present in the user code.
 
 While Builders often don't bring much benefit for Kotlin, we often feel the need for them for Java interop
-or APIs targeted to Java especially for classes with many constructor arguments. 
+or APIs targeted to Java especially for classes with many constructor arguments.
 
-In those cases, we either switch to Lombok and implement such classes in Javaor implement the Builder manually. 
-Implementing Builders in Kotlin is indeed quite simple thanks to `apply` but it is still boilerplate and 
+In those cases, we either switch to Lombok and implement such classes in Javaor implement the Builder manually.
+Implementing Builders in Kotlin is indeed quite simple thanks to `apply` but it is still boilerplate and
 you can't make sure your builder works from Java unless you use it in your Kotlin code too or have tests for
-Java clients. This plugin makes sure Builder is correctly structured, checking your Builder class methods and 
+Java clients. This plugin makes sure Builder is correctly structured, checking your Builder class methods and
 their signatures so we can safely use Kotlin constructors in Kotlin code and still expect Java clients work
 through the Builder.
 
