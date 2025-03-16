@@ -142,6 +142,16 @@ class Car(val model: String) : Vehicle("car")
 Generates bodies of Builder class methods. Provides basic builder without a separate IDE plugin
 thus, method declarations must be present in the user code.
 
+While Builders often don't bring much benefit for Kotlin, we often feel the need for them for Java interop
+or APIs targeted to Java especially for classes with many constructor arguments. 
+
+In those cases, we either switch to Lombok and implement such classes in Javaor implement the Builder manually. 
+Implementing Builders in Kotlin is indeed quite simple thanks to `apply` but it is still boilerplate and 
+you can't make sure your builder works from Java unless you use it in your Kotlin code too or have tests for
+Java clients. This plugin makes sure Builder is correctly structured, checking your Builder class methods and 
+their signatures so we can safely use Kotlin constructors in Kotlin code and still expect Java clients work
+through the Builder.
+
 ```Kotlin
 
   @Buildable
@@ -196,6 +206,7 @@ thus, method declarations must be present in the user code.
 * Annotations can be placed on just regular classes, no objects, interfaces or other class types
 * User defined method bodies are dummy placeholders and, they are always overwritten by the compiler
 * Constructor doesn't have to be public, as buildable classes often prefer private constructors
+* Companion builder method is optional as the plugin doesn't check or validate Companion object methods
 
 ## Contributing
 
