@@ -213,4 +213,27 @@ class ToStringTest {
     v.name = "John"
     assertEquals("LateInitProperty(name=John)", v.toString())
   }
+
+  @ToString
+  private open class ToStringGeneric<T>(val name: T?) {
+    var surname: String? = null
+  }
+
+  @ToString(callSuper = true)
+  private class ToStringGenericDerived<T, E>(name: T?, surname: String? = "Doe") : ToStringGeneric<T>(name) {
+    var age: E? = null
+
+    init {
+      this.surname = surname
+    }
+  }
+
+  @Test
+  fun testGeneric() {
+    val base = ToStringGeneric<String>("John")
+    assertEquals("ToStringGeneric(name=John, surname=null)", base.toString())
+
+    val derived = ToStringGenericDerived<String, Int>("John").apply { age = 10 }
+    assertEquals("ToStringGenericDerived(super=ToStringGeneric(name=John, surname=Doe), age=10)", derived.toString())
+  }
 }

@@ -1,8 +1,10 @@
 package com.bivektor.lombokt
 
 import lombokt.EqualsAndHashCode
+import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 
 @Suppress("unused")
@@ -142,6 +144,7 @@ class EqualsAndHashcodeTest {
     val chNull: Char? = null,
     val strNull: String? = null,
     val lstNull: List<String>? = null,
+    val dec: BigDecimal? = null
   )
 
   @Test
@@ -154,6 +157,17 @@ class EqualsAndHashcodeTest {
     val v3 = VariousTypes(dblNull = 0.1)
     assertNotEquals(v1, v3)
     assertNotEquals(v1.hashCode(), v3.hashCode())
+
+    assertEquals(VariousTypes(lng = 100L), VariousTypes(lng = 100L))
+    assertEquals(VariousTypes(shrt = 3), VariousTypes(shrt = 3))
+    assertEquals(VariousTypes(byt = 4), VariousTypes(byt = 4))
+    assertEquals(VariousTypes(bool = false), VariousTypes(bool = false))
+    assertEquals(VariousTypes(ch = 'd'), VariousTypes(ch = 'd'))
+    assertEquals(VariousTypes(str = "other"), VariousTypes(str = "other"))
+    assertEquals(VariousTypes(dblNull = 0.1), VariousTypes(dblNull = 0.1))
+    assertNotEquals(VariousTypes(dblNull = 0.10001), VariousTypes(dblNull = 0.100000001))
+    assertEquals(VariousTypes(dec = BigDecimal(100)), VariousTypes(dec = BigDecimal(100)))
+    assertNotEquals(VariousTypes(dec = BigDecimal(100.01)), VariousTypes(dec = BigDecimal(100.011)))
   }
 
   private class Menu {
@@ -227,6 +241,29 @@ class EqualsAndHashcodeTest {
     assertNotEquals(v3, v5)
     assertNotEquals(v3.hashCode(), v5.hashCode())
     assertEquals(v3.hashCode(), calculateHashCode("a"))
+  }
+
+  @EqualsAndHashCode
+  private open class GenericBase<T>(val value: T)
+
+  @EqualsAndHashCode(callSuper = true)
+  private class GenericDerived<T, E>(value: T) : GenericBase<T>(value) {
+    var e: E? = null
+  }
+
+  @Test
+  fun testGeneric() {
+    val base1 = GenericBase<Int>(10)
+    val base2 = GenericBase<Int>(10)
+    val base3 = GenericBase<Int>(11)
+    val base4 = GenericBase<Long>(10)
+
+    assertEquals(base1, base2)
+    assertEquals(base1.hashCode(), base2.hashCode())
+    assertNotEquals(base1, base3)
+    assertNotEquals(base1.hashCode(), base3.hashCode())
+    assertFalse { base1.equals(base4) }
+    assertEquals(base1.hashCode(), base4.hashCode())
   }
 }
 
