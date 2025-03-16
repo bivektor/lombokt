@@ -160,7 +160,7 @@ through the Builder.
     // Required parameter
     val name: String,
 
-    // Parameter without property
+    // Parameter without property is possible but problematic for creating a builder from existing instance
     prefix: String? = "Dr.",
 
     // Nullable parameter with non-null default value
