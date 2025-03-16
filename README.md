@@ -247,6 +247,7 @@ through the Builder.
 * User defined method bodies are dummy placeholders and, they are always overwritten by the compiler
 * Constructor doesn't have to be public, as buildable classes often prefer private constructors
 * Companion builder method is optional as the plugin doesn't check or validate Companion object methods
+* Generic types are not [supported yet](https://github.com/bivektor/lombokt/issues/41).
 
 ## Contributing
 
