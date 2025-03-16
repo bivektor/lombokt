@@ -1,20 +1,22 @@
-# lombokt
+# lombokt : Lombok for Kotlin
 
-A lightweight port of [Project Lombok](https://projectlombok.org/) to Kotlin, providing useful annotations like `@ToString`, `@EqualsAndHashCode`.
+A lightweight port of [Project Lombok](https://projectlombok.org/) to Kotlin, providing useful annotations like `@ToString`, `@EqualsAndHashCode` and `@Buildable`.
+
 Kotlin data classes already provide support for toString, equals and hashcode generation but for regular classes, one has to implement these methods manually. This plugin aims to reduce such boilerplate.
-It also supports data classes mainly for excluding specific properties or maybe inclusion of additional properties especially for toString generation
+The plugin also provides basic Builder support mainly for Java Interop.
 
 ## Features
 
 - `@ToString` – Generates a `toString()` method automatically.
 - `@EqualsAndHashCode` – Generates `equals()` and `hashCode()` methods.
-- '@Buildable' - Generates Builder class member bodies
+- `@Buildable` - Generates Builder class member bodies
 
 ## Requirements
 
-- Kotlin JVM 2.1+ (K2 Compiler)
+- Kotlin JVM (K2 Compiler)
+- Tested with Kotlin JVM 2.1.10 
 
-Currently only JVM platform is supported through K2 compiler and there is no plan to support K1.
+Currently only JVM platform is supported. K2 compiler is required (languageVersion >= 2.0) and there is no plan to support K1.
 
 ## Installation
 
