@@ -29,9 +29,47 @@ dependencies {
 
 Please do not use versions before 3.0.0 as they are in fact experimental versions mistakenly published as beta.
 
-Or if using Maven:
+#### Maven
 
-TODO
+```xml
+
+<plugin>
+  <groupId>org.jetbrains.kotlin</groupId>
+  <artifactId>kotlin-maven-plugin</artifactId>
+  <version>${kotlin.version}</version>
+  <executions>
+    <execution>
+      <id>compile</id>
+      <phase>compile</phase>
+      <goals>
+        <goal>compile</goal>
+      </goals>
+    </execution>
+    <execution>
+      <id>test-compile</id>
+      <phase>test-compile</phase>
+      <goals>
+        <goal>test-compile</goal>
+      </goals>
+    </execution>
+  </executions>
+  <configuration>
+    <compilerPlugins>
+      <plugin>lombokt</plugin>
+    </compilerPlugins>
+  </configuration>
+  <dependencies>
+    <dependency>
+      <groupId>com.bivektor.lombokt</groupId>
+      <artifactId>lombokt-maven</artifactId>
+      <version>${lombokt.version}</version>
+    </dependency>
+  </dependencies>
+</plugin>
+
+```
+
+Full POM can be found in **examples/maven** sample project
 
 ## Usage
 
