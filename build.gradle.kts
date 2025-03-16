@@ -70,6 +70,10 @@ subprojects {
     localSpec()
 
     centralPortalSpec {
+
+      // Do not publish to maven central. We do it manually
+      allowMavenCentralSync = false
+
       auth {
         user.set(secret("centralPortal.user"))
         password.set(secret("centralPortal.password"))
