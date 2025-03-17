@@ -2,6 +2,8 @@ package com.bivektor.lombokt.fir.checkers
 
 import com.bivektor.lombokt.LomboktNames.BUILDABLE_ANNOTATION_ID
 import com.bivektor.lombokt.LomboktNames.BUILDER_ANNOTATION_ID
+import com.bivektor.lombokt.LomboktNames.BUILDER_BUILD_METHOD_NAME
+import com.bivektor.lombokt.fir.checkers.LomboktDiagnostics.UNSUPPORTED_CLASS_TYPE
 import com.bivektor.lombokt.fir.services.BuildableService
 import com.bivektor.lombokt.fir.services.buildableService
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
@@ -10,6 +12,7 @@ import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
+import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
 import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
 import org.jetbrains.kotlin.fir.declarations.primaryConstructorIfAny
 import org.jetbrains.kotlin.fir.resolve.getContainingDeclaration
@@ -69,7 +72,7 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
     if (!service.isSuitableBuilderClassType(builderClass.symbol)) {
       return reporter.reportOn(
         builderClass.source,
-        LomboktDiagnostics.UNSUPPORTED_CLASS_TYPE,
+        UNSUPPORTED_CLASS_TYPE,
         "Builder class must be a regular class, not an object, interface, inner, inline, value or enum class.",
         context
       )
@@ -78,7 +81,7 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
     if (!service.isSuitableBuildableClassType(buildableClass.symbol)) {
       return reporter.reportOn(
         buildableClass.source,
-        LomboktDiagnostics.UNSUPPORTED_CLASS_TYPE,
+        UNSUPPORTED_CLASS_TYPE,
         "Buildable class must be a regular class, not an object, interface, inner, inline, value or enum class.",
         context
       )
@@ -94,6 +97,14 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
         context
       )
       return
+    }
+
+    val constructorParams = constructor.valueParameterSymbols.associateBy { it.name }
+    builderClass.declarations.filterIsInstance<FirSimpleFunction>().forEach { builderFunction ->
+      if (builderFunction.name == BUILDER_BUILD_METHOD_NAME) return@forEach
+      if (!constructorParams.containsKey(builderFunction.name))
+        reporter.unrecognizedBuilderMethod(builderFunction, context)
+
     }
   }
 }
