@@ -22,7 +22,7 @@ import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 
 
-private val builderPropertiesCallableName = Name.identifier("builderProperties")
+private val builderPropertiesCallableName = Name.identifier("Lombokt.builderClassProperties")
 
 class BuildableGenerator(session: FirSession) : FirDeclarationGenerationExtension(session) {
 
