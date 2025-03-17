@@ -186,11 +186,8 @@ While Builders often don't bring much benefit for Kotlin, we often feel the need
 or APIs targeted to Java especially for classes with many constructor arguments.
 
 In those cases, we either switch to Lombok and implement such classes in Javaor implement the Builder manually.
-Implementing Builders in Kotlin is indeed quite simple thanks to `apply` but it is still boilerplate and
-you can't make sure your builder works from Java unless you use it in your Kotlin code too or have tests for
-Java clients. This plugin makes sure Builder is correctly structured, checking your Builder class methods and
-their signatures so we can safely use Kotlin constructors in Kotlin code and still expect Java clients work
-through the Builder.
+Implementing Builders in Kotlin is indeed quite simple thanks to `apply` but it is still boilerplate when you have
+several properties
 
 ```Kotlin
 
@@ -239,15 +236,12 @@ through the Builder.
 ```
 
 * Primary constructor with at least one parameter is required.
-* Builder class must have a method for each constructor parameter with same name and type
 * Both `@Buildable` and `@Builder` annotations are required
-* Compilation fails for missing or invalid builder methods
 * Builder class cannot have extra property or method declarations
 * Annotations can be placed on just regular classes including data classes but not on objects, interfaces, inline, local, enum and value classes
 * User defined method bodies are dummy placeholders and, they are always overwritten by the compiler
-* Constructor doesn't have to be public, as buildable classes often prefer private constructors
+* Constructor doesn't have to be public, in fact private/protected is better to make sure you always use the builder as Lombokt doesn't validate your Builder class methods  
 * Companion builder method is optional as the plugin doesn't check or validate Companion object methods
-* Generic types are not [supported yet](https://github.com/bivektor/lombokt/issues/41).
 
 ## Contributing
 
