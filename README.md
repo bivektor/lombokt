@@ -237,10 +237,9 @@ several properties
 
 * Primary constructor with at least one parameter is required.
 * Both `@Buildable` and `@Builder` annotations are required
-* Builder class cannot have extra property or method declarations
 * Annotations can be placed on just regular classes including data classes but not on objects, interfaces, inline, local, enum and value classes
 * User defined method bodies are dummy placeholders and, they are always overwritten by the compiler
-* Constructor doesn't have to be public, in fact private/protected is better to make sure you always use the builder as Lombokt doesn't validate your Builder class methods  
+* Constructor can be private/protected which is often the case for a buildable class 
 * Companion builder method is optional as the plugin doesn't check or validate Companion object methods
 
 ## Contributing
