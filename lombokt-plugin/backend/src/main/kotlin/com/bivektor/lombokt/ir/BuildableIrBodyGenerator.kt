@@ -12,6 +12,8 @@ import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetValueImpl
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.types.classOrNull
+import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.isNullable
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
@@ -88,8 +90,11 @@ object BuildableIrBodyGenerator {
           }
         }
 
+        val genericTypeParams =
+          irFunction.returnType.classOrNull?.owner?.typeParameters?.map { it.defaultType } ?: emptyList()
+
         +irReturn(
-          irCallConstructor(parentClassConstructor.symbol, emptyList()).apply {
+          irCallConstructor(parentClassConstructor.symbol, genericTypeParams).apply {
             for ((index, parameter) in constructorArguments.withIndex()) {
               putValueArgument(index, parameter.toCallArgument())
             }
@@ -101,7 +106,12 @@ object BuildableIrBodyGenerator {
         val parameterValue = irGetProperty(irThis(), name)
         return if (hasDefaultValue()) {
           if (defaultValue!!.expression.isNullConst()) return parameterValue
-          irIfThenElse(parameterValue.type, irIsPropertyNotSet(irThis(), this), defaultValue!!.expression, parameterValue)
+          irIfThenElse(
+            parameterValue.type,
+            irIsPropertyNotSet(irThis(), this),
+            defaultValue!!.expression,
+            parameterValue
+          )
         } else {
           parameterValue
         }

@@ -106,4 +106,29 @@ class BuildableTest {
     assertEquals(profile, person.profile)
     assertEquals("PersonData(name=John, age=25, email=some, profile={name=Jane})", person.toString())
   }
+
+  private data class Value<T, M>(val x: T, val y: M)
+
+  @Buildable
+  private class GenericBuildable<A, B> private constructor(val value: Value<A, B>) {
+
+    @Buildable.Builder
+    @Suppress("unused")
+    class Builder<X, E> {
+      fun value(value: Value<X, E>) = this
+      fun build(): GenericBuildable<X, E> = error("not implemented")
+    }
+
+    companion object {
+      @JvmStatic
+      fun <X, E> builder() = Builder<X, E>()
+    }
+  }
+
+  @Test
+  fun genericBuildable() {
+    val value = Value<String, Int>("John", 10)
+    val genericBuildable = GenericBuildable.builder<String, Int>().value(value).build()
+    assertEquals(value, genericBuildable.value)
+  }
 }
