@@ -1,3 +1,7 @@
+plugins {
+  id("publishing-conventions")
+}
+
 configurations.create("embedded")
 
 subprojects {
@@ -32,7 +36,7 @@ tasks {
     exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
 
     // Optional: Deduplicate if multiple modules have the same resources
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.WARN
   }
 
   sourcesJar {

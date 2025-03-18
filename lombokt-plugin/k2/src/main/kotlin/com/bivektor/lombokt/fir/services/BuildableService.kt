@@ -17,6 +17,8 @@ import org.jetbrains.kotlin.fir.symbols.impl.FirAnonymousObjectSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 
 class BuildableService(session: FirSession) : FirExtensionSessionComponent(session) {
+
+  @Suppress("UNUSED_ANONYMOUS_PARAMETER")
   private val builderCache: FirCache<FirClassSymbol<*>, Boolean, Nothing?> =
     session.firCachesFactory.createCache { symbol, _ ->
       symbol.hasAnnotation(
@@ -25,6 +27,7 @@ class BuildableService(session: FirSession) : FirExtensionSessionComponent(sessi
       )
     }
 
+  @Suppress("UNUSED_ANONYMOUS_PARAMETER")
   private val buildableCache: FirCache<FirClassSymbol<*>, Boolean, Nothing?> =
     session.firCachesFactory.createCache { symbol, _ ->
       symbol.hasAnnotation(
@@ -55,8 +58,6 @@ class BuildableService(session: FirSession) : FirExtensionSessionComponent(sessi
       else -> true
     }
   }
-
-
 }
 
 val FirSession.buildableService: BuildableService by FirSession.sessionComponentAccessor()

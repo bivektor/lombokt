@@ -5,16 +5,6 @@ dependencyResolutionManagement {
   }
 }
 
-pluginManagement {
-  plugins {
-    val kotlinVersion: String by settings
-    kotlin("jvm") version kotlinVersion
-
-    val deployerPluginVersion: String by settings
-    id("io.deepmedia.tools.deployer") version deployerPluginVersion
-  }
-}
-
 rootProject.name = "lombokt"
 include("lombokt-api")
 include("lombokt-plugin")
