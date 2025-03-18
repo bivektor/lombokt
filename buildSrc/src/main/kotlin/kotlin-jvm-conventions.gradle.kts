@@ -12,7 +12,9 @@ kotlin {
 }
 
 java {
-  withSourcesJar()
+  if (!isTestProject) {
+    withSourcesJar()
+  }
 }
 
 dependencies {
