@@ -4,15 +4,21 @@ plugins {
   id("io.deepmedia.tools.deployer")
 }
 
+the<JavaPluginExtension>().apply {
+  if (hasJavaDocs)
+    withJavadocJar()
+}
+
 the<DeployerExtension>().apply {
   projectInfo {
-    val scmUrl = "https://github.com/bivektor/lombokt"
+    val githubRepo: String by project
+    val githubUrl = "https://github.com/$githubRepo"
 
-    url = scmUrl
+    url = githubUrl
     scm {
-      connection = "scm:git:git://github.com/bivektor/${scmUrl}.git"
+      connection = "scm:git:git://github.com/${githubRepo}.git"
       developerConnection = connection
-      url = scmUrl
+      url = githubUrl
     }
 
     license(apache2)
@@ -27,7 +33,8 @@ the<DeployerExtension>().apply {
   content {
     component {
       fromJava()
-      emptyDocs()
+      if (!hasJavaDocs)
+        emptyDocs()
     }
   }
 
@@ -49,3 +56,5 @@ the<DeployerExtension>().apply {
     }
   }
 }
+
+private val Project.hasJavaDocs get() = pluginManager.hasPlugin("org.jetbrains.dokka")
