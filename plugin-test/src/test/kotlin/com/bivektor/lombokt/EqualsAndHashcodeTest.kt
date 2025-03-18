@@ -265,9 +265,25 @@ class EqualsAndHashcodeTest {
     assertFalse { base1.equals(base4) }
     assertEquals(base1.hashCode(), base4.hashCode())
   }
+
+  @Test
+  fun topLevelClass() {
+    val v1 = EqualsAndHashCodeTopLevel("a")
+    val v2 = EqualsAndHashCodeTopLevel("a")
+    val v3 = EqualsAndHashCodeTopLevel("b")
+
+    assertEquals(v1, v2)
+    assertEquals(calculateHashCode("a"), v1.hashCode())
+    assertEquals(v1.hashCode(), v2.hashCode())
+    assertNotEquals(v1, v3)
+    assertNotEquals(v1.hashCode(), v3.hashCode())
+  }
 }
 
 private fun calculateHashCode(vararg values: Any?): Int {
   return values.fold(17) { hash, value -> 31 * hash + (value?.hashCode() ?: 0) }
 }
+
+@EqualsAndHashCode
+class EqualsAndHashCodeTopLevel(val name: String)
 

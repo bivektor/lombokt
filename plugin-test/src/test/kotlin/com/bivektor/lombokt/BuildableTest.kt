@@ -131,4 +131,20 @@ class BuildableTest {
     val genericBuildable = GenericBuildable.builder<String, Int>().value(value).build()
     assertEquals(value, genericBuildable.value)
   }
+
+  @Test
+  fun topLevel() {
+    val b = BuildableTopLevel.Builder().name("John").build()
+    assertEquals("John", b.name)
+  }
+}
+
+@Buildable
+private class BuildableTopLevel(val name: String) {
+  @Buildable.Builder
+  @Suppress("unused")
+  class Builder {
+    fun name(name: String) = this
+    fun build() = BuildableTopLevel("")
+  }
 }

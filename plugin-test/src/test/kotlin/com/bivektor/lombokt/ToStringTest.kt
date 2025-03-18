@@ -236,4 +236,12 @@ class ToStringTest {
     val derived = ToStringGenericDerived<String, Int>("John").apply { age = 10 }
     assertEquals("ToStringGenericDerived(super=ToStringGeneric(name=John, surname=Doe), age=10)", derived.toString())
   }
+
+  @Test
+  fun topLevelClass() {
+    assertEquals("ToStringTopLevel(name=John)", ToStringTopLevel(name = "John").toString())
+  }
 }
+
+@ToString
+private class ToStringTopLevel(val name: String)
