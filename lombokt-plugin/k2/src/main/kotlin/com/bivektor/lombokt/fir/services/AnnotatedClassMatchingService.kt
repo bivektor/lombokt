@@ -7,7 +7,6 @@ import org.jetbrains.kotlin.fir.caches.getValue
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.extensions.FirExtensionSessionComponent
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassLikeSymbol
-import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 
@@ -15,6 +14,7 @@ abstract class AnnotatedClassMatchingService(
   session: FirSession, val annotationName: FqName
 ) : FirExtensionSessionComponent(session) {
 
+  @Suppress("UNUSED_ANONYMOUS_PARAMETER")
   private val cache: FirCache<FirClassLikeSymbol<*>, Boolean, Nothing?> =
     session.firCachesFactory.createCache { symbol, _ -> symbol.matches() }
 

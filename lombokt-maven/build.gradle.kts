@@ -1,3 +1,7 @@
+plugins {
+  id("publishing-conventions")
+}
+
 dependencies {
   implementation(project(":lombokt-plugin"))
   compileOnly(kotlin("maven-plugin"))

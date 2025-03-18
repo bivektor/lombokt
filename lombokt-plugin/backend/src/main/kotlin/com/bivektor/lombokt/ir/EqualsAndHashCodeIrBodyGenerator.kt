@@ -46,7 +46,8 @@ class EqualsAndHashCodeIrBodyGenerator(
     if (annotationConfig != null && irClass.isData) irClass.primaryConstructor!!.valueParameters.map { it.name } else emptyList()
 
   @OptIn(UnsafeDuringIrConstructionAPI::class)
-  private val propertiesToUse = annotationConfig?.let { annotation ->
+  @Suppress("UNUSED_ANONYMOUS_PARAMETER")
+  private val propertiesToUse = annotationConfig?.let { _ ->
     irClass.properties.filter { it.isIncluded }.toList()
   } ?: emptyList()
 
