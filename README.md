@@ -14,7 +14,7 @@ The plugin also provides basic Builder support mainly for Java Interop.
 ## Requirements
 
 - Kotlin JVM (K2 Compiler)
-- Tested with Kotlin JVM 2.1.10 
+- Tested with Kotlin JVM 2.1.10
 
 Currently only JVM platform is supported. K2 compiler is required (languageVersion >= 2.0) and there is no plan to support K1.
 
@@ -24,8 +24,8 @@ Add the dependency to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    compileOnly("com.bivektor.lombokt:lombok-api:3.0.0-beta.3")
-    kotlinCompilerPluginClasspath("com.bivektor.lombokt:lombokt-plugin:3.0.0-beta.3")
+    compileOnly("com.bivektor.lombokt:lombok-api:3.0.0-beta.4")
+    kotlinCompilerPluginClasspath("com.bivektor.lombokt:lombokt-plugin:3.0.0-beta.4")
 }
 ```
 
