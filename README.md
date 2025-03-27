@@ -219,7 +219,7 @@ several properties
       fun email(email: String?) = this
       fun profile(profile: Map<String, Any>) = this
       fun prefix(prefix: String?) = this
-      fun build() = Person("")
+      fun build(): Person = error("not implemented")
     }
 
     companion object {
