@@ -1,4 +1,4 @@
-# lombokt : Lombok for Kotlin
+# lomboKT : Lombok for Kotlin
 
 A lightweight port of [Project Lombok](https://projectlombok.org/) to Kotlin, providing useful annotations like `@ToString`, `@EqualsAndHashCode` and `@Buildable`.
 
@@ -112,9 +112,9 @@ Access is through getters by default but that can be configured as shown below.
 For data classes, only properties from the primary constructor are considered.
 For non-data classes, all properties including the ones declared in the class body are included by default.
 
-Note that, similar to how data classes work, Lombokt just calls `equals` and `hashcode` methods on the property values.
+Note that, similar to how data classes work, lomboKT just calls `equals` and `hashcode` methods on the property values.
 That's why arrays don't work as expected because of how these methods are defined in the `Array` class.
-Lombok handles this case for Java classes but neither Lombokt nor Kotlin data classes have such a special handling, thus one needs to use `List` or similar collection
+Lombok handles this case for Java classes but lomboKT does not have such a special handling, thus one needs to use `List` or similar collection
 
 ```kotlin
 import lombokt.EqualsAndHashCode
@@ -238,7 +238,7 @@ several properties
 * Primary constructor with at least one parameter is required.
 * Both `@Buildable` and `@Builder` annotations are required
 * Annotations can be placed on just regular classes including data classes but not on objects, interfaces, inline, local, enum and value classes.
-* User defined method bodies are dummy placeholders and, Lombokt always overwrites the setter methods and the 'build' method bodies.
+* User defined method bodies are dummy placeholders and, lomboKT always overwrites the setter methods and the 'build' method bodies.
 * Constructor can be private which is often the case for a buildable class.
 * Companion builder method is optional as the plugin doesn't check or validate Companion object methods.
 
