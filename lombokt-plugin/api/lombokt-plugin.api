@@ -116,16 +116,16 @@ public class com/bivektor/lombokt/fir/generators/ToStringGenerator : org/jetbrai
 
 public abstract class com/bivektor/lombokt/fir/services/AnnotatedClassMatchingService : org/jetbrains/kotlin/fir/extensions/FirExtensionSessionComponent {
 	public fun <init> (Lorg/jetbrains/kotlin/fir/FirSession;Lorg/jetbrains/kotlin/name/FqName;)V
-	public final fun getAnnotationName ()Lorg/jetbrains/kotlin/name/FqName;
-	public final fun isAnnotated (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassLikeSymbol;)Z
+	public final fun isAnnotated (Lorg/jetbrains/kotlin/fir/symbols/impl/FirRegularClassSymbol;)Z
+	public fun registerPredicates (Lorg/jetbrains/kotlin/fir/extensions/FirDeclarationPredicateRegistrar;)V
 }
 
 public final class com/bivektor/lombokt/fir/services/BuildableService : org/jetbrains/kotlin/fir/extensions/FirExtensionSessionComponent {
 	public fun <init> (Lorg/jetbrains/kotlin/fir/FirSession;)V
-	public final fun isBuildableClass (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
 	public final fun isBuilderClass (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
 	public final fun isSuitableBuildableClassType (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
 	public final fun isSuitableBuilderClassType (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
+	public fun registerPredicates (Lorg/jetbrains/kotlin/fir/extensions/FirDeclarationPredicateRegistrar;)V
 }
 
 public final class com/bivektor/lombokt/fir/services/BuildableServiceKt {

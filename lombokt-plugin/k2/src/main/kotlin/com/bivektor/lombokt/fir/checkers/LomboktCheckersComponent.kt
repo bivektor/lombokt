@@ -9,6 +9,10 @@ class LomboktCheckersComponent(session: FirSession) : FirAdditionalCheckersExten
   override val declarationCheckers: DeclarationCheckers
     get() = object: DeclarationCheckers() {
       override val classCheckers: Set<FirClassChecker>
-        get() = setOf(ToStringClassChecker, EqualsAndHashCodeClassChecker, BuildableClassChecker)
+        get() = setOf(
+          ToStringClassChecker,
+          EqualsAndHashCodeClassChecker,
+          BuildableClassChecker
+        )
     }
 }

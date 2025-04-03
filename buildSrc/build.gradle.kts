@@ -9,6 +9,8 @@ repositories {
 dependencies {
   val kotlinVersion: String by project
   implementation(kotlin("gradle-plugin", version = kotlinVersion))
+  implementation("org.jetbrains.kotlin.plugin.allopen:org.jetbrains.kotlin.plugin.allopen.gradle.plugin:$kotlinVersion")
+  implementation("org.jetbrains.kotlin.plugin.serialization:org.jetbrains.kotlin.plugin.serialization.gradle.plugin:$kotlinVersion")
 
   val deployerPluginVersion: String by project
   implementation("io.deepmedia.tools.deployer:io.deepmedia.tools.deployer.gradle.plugin:$deployerPluginVersion")
