@@ -1,0 +1,31 @@
+public abstract interface annotation class lombokt/Buildable : java/lang/annotation/Annotation {
+}
+
+public abstract interface annotation class lombokt/Buildable$Builder : java/lang/annotation/Annotation {
+}
+
+public abstract interface annotation class lombokt/EqualsAndHashCode : java/lang/annotation/Annotation {
+	public abstract fun callSuper ()Z
+	public abstract fun doNotUseGetters ()Z
+	public abstract fun onlyExplicitlyIncluded ()Z
+}
+
+public abstract interface annotation class lombokt/EqualsAndHashCode$Exclude : java/lang/annotation/Annotation {
+}
+
+public abstract interface annotation class lombokt/EqualsAndHashCode$Include : java/lang/annotation/Annotation {
+}
+
+public abstract interface annotation class lombokt/ToString : java/lang/annotation/Annotation {
+	public abstract fun callSuper ()Z
+	public abstract fun doNotUseGetters ()Z
+	public abstract fun onlyExplicitlyIncluded ()Z
+}
+
+public abstract interface annotation class lombokt/ToString$Exclude : java/lang/annotation/Annotation {
+}
+
+public abstract interface annotation class lombokt/ToString$Include : java/lang/annotation/Annotation {
+	public abstract fun name ()Ljava/lang/String;
+}
+

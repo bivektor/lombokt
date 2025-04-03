@@ -15,4 +15,8 @@ dependencies {
 
   val dokkaVersion: String by project
   implementation("org.jetbrains.dokka:dokka-gradle-plugin:$dokkaVersion")
+
+  val binaryCompatibilityValidatorVersion: String by project
+  implementation("org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin:$binaryCompatibilityValidatorVersion")
+
 }

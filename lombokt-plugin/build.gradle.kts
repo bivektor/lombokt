@@ -26,6 +26,10 @@ dependencies {
 }
 
 tasks {
+  apiBuild {
+    inputJar.value(jar.flatMap { it.archiveFile })
+  }
+
   jar {
     dependsOn(subprojects.map { it.tasks.named("jar") })
     subprojects.forEach { subproject ->

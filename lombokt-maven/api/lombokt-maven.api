@@ -1,0 +1,14 @@
+public final class com/bivektor/lombokt/maven/KotlinLomboktMavenPluginExtension : org/jetbrains/kotlin/maven/KotlinMavenPluginExtension {
+	public field logger Lorg/codehaus/plexus/logging/Logger;
+	public fun <init> ()V
+	public fun getCompilerPluginId ()Ljava/lang/String;
+	public final fun getLogger ()Lorg/codehaus/plexus/logging/Logger;
+	public fun getPluginOptions (Lorg/apache/maven/project/MavenProject;Lorg/apache/maven/plugin/MojoExecution;)Ljava/util/List;
+	public fun isApplicable (Lorg/apache/maven/project/MavenProject;Lorg/apache/maven/plugin/MojoExecution;)Z
+	public final fun setLogger (Lorg/codehaus/plexus/logging/Logger;)V
+}
+
+public final class com/bivektor/lombokt/maven/LomboktMavenPluginExtensionKt {
+	public static final field LOMBOKT_COMPILER_PLUGIN_ID Ljava/lang/String;
+}
+

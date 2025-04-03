@@ -1,0 +1,188 @@
+public final class LomboktIrUtilsKt {
+	public static final fun getConstValueByName (Lorg/jetbrains/kotlin/ir/expressions/IrConstructorCall;Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/bivektor/lombokt/LomboktComponentRegistrar : org/jetbrains/kotlin/compiler/plugin/CompilerPluginRegistrar {
+	public fun <init> ()V
+	public fun getSupportsK2 ()Z
+	public fun registerExtensions (Lorg/jetbrains/kotlin/compiler/plugin/CompilerPluginRegistrar$ExtensionStorage;Lorg/jetbrains/kotlin/config/CompilerConfiguration;)V
+}
+
+public final class com/bivektor/lombokt/LomboktNames {
+	public static final field INSTANCE Lcom/bivektor/lombokt/LomboktNames;
+	public final fun getBUILDABLE_ANNOTATION_ID ()Lorg/jetbrains/kotlin/name/ClassId;
+	public final fun getBUILDABLE_ANNOTATION_NAME ()Lorg/jetbrains/kotlin/name/FqName;
+	public final fun getBUILDER_ANNOTATION_ID ()Lorg/jetbrains/kotlin/name/ClassId;
+	public final fun getBUILDER_ANNOTATION_NAME ()Lorg/jetbrains/kotlin/name/FqName;
+	public final fun getBUILDER_BUILD_METHOD_NAME ()Lorg/jetbrains/kotlin/name/Name;
+	public final fun getEQUALS_HASHCODE_ANNOTATION_NAME ()Lorg/jetbrains/kotlin/name/FqName;
+	public final fun getEQUALS_METHOD_NAME ()Lorg/jetbrains/kotlin/name/Name;
+	public final fun getHASHCODE_METHOD_NAME ()Lorg/jetbrains/kotlin/name/Name;
+	public final fun getTO_STRING_ANNOTATION_NAME ()Lorg/jetbrains/kotlin/name/FqName;
+	public final fun getTO_STRING_METHOD_NAME ()Lorg/jetbrains/kotlin/name/Name;
+}
+
+public final class com/bivektor/lombokt/PluginKeyKt {
+	public static final fun isGeneratedByPluginKey (Lorg/jetbrains/kotlin/ir/declarations/IrDeclaration;Lorg/jetbrains/kotlin/GeneratedDeclarationKey;)Z
+}
+
+public final class com/bivektor/lombokt/PluginKeys {
+	public static final field INSTANCE Lcom/bivektor/lombokt/PluginKeys;
+	public final fun getBuildableKey ()Lorg/jetbrains/kotlin/GeneratedDeclarationKey;
+	public final fun getEqualsHashCodeKey ()Lorg/jetbrains/kotlin/GeneratedDeclarationKey;
+	public final fun getToStringKey ()Lorg/jetbrains/kotlin/GeneratedDeclarationKey;
+}
+
+public final class com/bivektor/lombokt/fir/LomboktFirExtensionRegistrar : org/jetbrains/kotlin/fir/extensions/FirExtensionRegistrar {
+	public fun <init> ()V
+}
+
+public final class com/bivektor/lombokt/fir/LomboktFirUtilsKt {
+	public static final fun findAnnotation (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;Lorg/jetbrains/kotlin/fir/FirSession;Lorg/jetbrains/kotlin/name/ClassId;Z)Lorg/jetbrains/kotlin/fir/expressions/FirAnnotation;
+	public static synthetic fun findAnnotation$default (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;Lorg/jetbrains/kotlin/fir/FirSession;Lorg/jetbrains/kotlin/name/ClassId;ZILjava/lang/Object;)Lorg/jetbrains/kotlin/fir/expressions/FirAnnotation;
+	public static final fun isFunctionDeclaredOrNotOverridable (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;Lorg/jetbrains/kotlin/fir/FirSession;Lkotlin/jvm/functions/Function1;)Z
+	public static final fun isValueClass (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
+}
+
+public final class com/bivektor/lombokt/fir/NamedFunctionDescriptor {
+	public fun <init> (Lorg/jetbrains/kotlin/name/Name;Ljava/util/List;)V
+	public final fun component1 ()Lorg/jetbrains/kotlin/name/Name;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/jetbrains/kotlin/name/Name;Ljava/util/List;)Lcom/bivektor/lombokt/fir/NamedFunctionDescriptor;
+	public static synthetic fun copy$default (Lcom/bivektor/lombokt/fir/NamedFunctionDescriptor;Lorg/jetbrains/kotlin/name/Name;Ljava/util/List;ILjava/lang/Object;)Lcom/bivektor/lombokt/fir/NamedFunctionDescriptor;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Lorg/jetbrains/kotlin/name/Name;
+	public final fun getPredicate ()Lkotlin/jvm/functions/Function1;
+	public final fun getValueParameterTypes ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/bivektor/lombokt/fir/checkers/BuildableClassChecker : org/jetbrains/kotlin/fir/analysis/checkers/declaration/FirDeclarationChecker {
+	public static final field INSTANCE Lcom/bivektor/lombokt/fir/checkers/BuildableClassChecker;
+	public fun check (Lorg/jetbrains/kotlin/fir/declarations/FirClass;Lorg/jetbrains/kotlin/fir/analysis/checkers/context/CheckerContext;Lorg/jetbrains/kotlin/diagnostics/DiagnosticReporter;)V
+	public synthetic fun check (Lorg/jetbrains/kotlin/fir/declarations/FirDeclaration;Lorg/jetbrains/kotlin/fir/analysis/checkers/context/CheckerContext;Lorg/jetbrains/kotlin/diagnostics/DiagnosticReporter;)V
+}
+
+public final class com/bivektor/lombokt/fir/checkers/EqualsAndHashCodeClassChecker : org/jetbrains/kotlin/fir/analysis/checkers/declaration/FirDeclarationChecker {
+	public static final field INSTANCE Lcom/bivektor/lombokt/fir/checkers/EqualsAndHashCodeClassChecker;
+	public fun check (Lorg/jetbrains/kotlin/fir/declarations/FirClass;Lorg/jetbrains/kotlin/fir/analysis/checkers/context/CheckerContext;Lorg/jetbrains/kotlin/diagnostics/DiagnosticReporter;)V
+	public synthetic fun check (Lorg/jetbrains/kotlin/fir/declarations/FirDeclaration;Lorg/jetbrains/kotlin/fir/analysis/checkers/context/CheckerContext;Lorg/jetbrains/kotlin/diagnostics/DiagnosticReporter;)V
+}
+
+public final class com/bivektor/lombokt/fir/checkers/LomboktCheckersComponent : org/jetbrains/kotlin/fir/analysis/extensions/FirAdditionalCheckersExtension {
+	public fun <init> (Lorg/jetbrains/kotlin/fir/FirSession;)V
+	public fun getDeclarationCheckers ()Lorg/jetbrains/kotlin/fir/analysis/checkers/declaration/DeclarationCheckers;
+}
+
+public final class com/bivektor/lombokt/fir/checkers/LomboktDiagnostics {
+	public static final field INSTANCE Lcom/bivektor/lombokt/fir/checkers/LomboktDiagnostics;
+	public final fun getANNOTATED_DATA_CLASS_BODY_PROPERTY ()Lorg/jetbrains/kotlin/diagnostics/KtDiagnosticFactory1;
+	public final fun getBUILDABLE_INVALID_PRIMARY_CONSTRUCTOR ()Lorg/jetbrains/kotlin/diagnostics/KtDiagnosticFactory1;
+	public final fun getBUILDABLE_MISSING_BUILDER ()Lorg/jetbrains/kotlin/diagnostics/KtDiagnosticFactory1;
+	public final fun getBUILDER_INVALID_LOCATION ()Lorg/jetbrains/kotlin/diagnostics/KtDiagnosticFactory1;
+	public final fun getBUILDER_UNRECOGNIZED_METHOD ()Lorg/jetbrains/kotlin/diagnostics/KtDiagnosticFactory1;
+	public final fun getFUNCTION_DECLARED_OR_NOT_OVERRIDABLE ()Lorg/jetbrains/kotlin/diagnostics/KtDiagnosticFactory1;
+	public final fun getUNSUPPORTED_CLASS_TYPE ()Lorg/jetbrains/kotlin/diagnostics/KtDiagnosticFactory1;
+}
+
+public final class com/bivektor/lombokt/fir/checkers/LomboktDiagnosticsKt {
+	public static final fun unrecognizedBuilderMethod (Lorg/jetbrains/kotlin/diagnostics/DiagnosticReporter;Lorg/jetbrains/kotlin/fir/declarations/FirFunction;Lorg/jetbrains/kotlin/diagnostics/DiagnosticContext;)V
+}
+
+public final class com/bivektor/lombokt/fir/checkers/ToStringClassChecker : org/jetbrains/kotlin/fir/analysis/checkers/declaration/FirDeclarationChecker {
+	public static final field INSTANCE Lcom/bivektor/lombokt/fir/checkers/ToStringClassChecker;
+	public fun check (Lorg/jetbrains/kotlin/fir/declarations/FirClass;Lorg/jetbrains/kotlin/fir/analysis/checkers/context/CheckerContext;Lorg/jetbrains/kotlin/diagnostics/DiagnosticReporter;)V
+	public synthetic fun check (Lorg/jetbrains/kotlin/fir/declarations/FirDeclaration;Lorg/jetbrains/kotlin/fir/analysis/checkers/context/CheckerContext;Lorg/jetbrains/kotlin/diagnostics/DiagnosticReporter;)V
+}
+
+public final class com/bivektor/lombokt/fir/generators/BuildableGenerator : org/jetbrains/kotlin/fir/extensions/FirDeclarationGenerationExtension {
+	public fun <init> (Lorg/jetbrains/kotlin/fir/FirSession;)V
+	public fun generateProperties (Lorg/jetbrains/kotlin/name/CallableId;Lorg/jetbrains/kotlin/fir/extensions/DeclarationGenerationContext$Member;)Ljava/util/List;
+	public fun getCallableNamesForClass (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;Lorg/jetbrains/kotlin/fir/extensions/DeclarationGenerationContext$Member;)Ljava/util/Set;
+}
+
+public class com/bivektor/lombokt/fir/generators/EqualsAndHashcodeGenerator : org/jetbrains/kotlin/fir/extensions/FirDeclarationGenerationExtension {
+	public fun <init> (Lorg/jetbrains/kotlin/fir/FirSession;)V
+	public fun generateFunctions (Lorg/jetbrains/kotlin/name/CallableId;Lorg/jetbrains/kotlin/fir/extensions/DeclarationGenerationContext$Member;)Ljava/util/List;
+	public fun getCallableNamesForClass (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;Lorg/jetbrains/kotlin/fir/extensions/DeclarationGenerationContext$Member;)Ljava/util/Set;
+}
+
+public class com/bivektor/lombokt/fir/generators/ToStringGenerator : org/jetbrains/kotlin/fir/extensions/FirDeclarationGenerationExtension {
+	public fun <init> (Lorg/jetbrains/kotlin/fir/FirSession;)V
+	public fun generateFunctions (Lorg/jetbrains/kotlin/name/CallableId;Lorg/jetbrains/kotlin/fir/extensions/DeclarationGenerationContext$Member;)Ljava/util/List;
+	public fun getCallableNamesForClass (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;Lorg/jetbrains/kotlin/fir/extensions/DeclarationGenerationContext$Member;)Ljava/util/Set;
+}
+
+public abstract class com/bivektor/lombokt/fir/services/AnnotatedClassMatchingService : org/jetbrains/kotlin/fir/extensions/FirExtensionSessionComponent {
+	public fun <init> (Lorg/jetbrains/kotlin/fir/FirSession;Lorg/jetbrains/kotlin/name/FqName;)V
+	public final fun getAnnotationName ()Lorg/jetbrains/kotlin/name/FqName;
+	public final fun isAnnotated (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassLikeSymbol;)Z
+}
+
+public final class com/bivektor/lombokt/fir/services/BuildableService : org/jetbrains/kotlin/fir/extensions/FirExtensionSessionComponent {
+	public fun <init> (Lorg/jetbrains/kotlin/fir/FirSession;)V
+	public final fun isBuildableClass (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
+	public final fun isBuilderClass (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
+	public final fun isSuitableBuildableClassType (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
+	public final fun isSuitableBuilderClassType (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
+}
+
+public final class com/bivektor/lombokt/fir/services/BuildableServiceKt {
+	public static final fun getBuildableService (Lorg/jetbrains/kotlin/fir/FirSession;)Lcom/bivektor/lombokt/fir/services/BuildableService;
+}
+
+public final class com/bivektor/lombokt/fir/services/EqualsAndHashCodeService : com/bivektor/lombokt/fir/services/AnnotatedClassMatchingService {
+	public fun <init> (Lorg/jetbrains/kotlin/fir/FirSession;)V
+	public final fun checkClass (Lorg/jetbrains/kotlin/fir/declarations/FirClass;Lorg/jetbrains/kotlin/fir/analysis/checkers/context/CheckerContext;Lorg/jetbrains/kotlin/diagnostics/DiagnosticReporter;)V
+	public final fun getEqualsFunction ()Lcom/bivektor/lombokt/fir/NamedFunctionDescriptor;
+	public final fun getHashCodeFunction ()Lcom/bivektor/lombokt/fir/NamedFunctionDescriptor;
+	public final fun isAnyFunctionDeclaredOrNotOverridable (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
+	public final fun isSuitableClassType (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
+}
+
+public final class com/bivektor/lombokt/fir/services/EqualsAndHashCodeServiceKt {
+	public static final fun getEqualsAndHashCodeService (Lorg/jetbrains/kotlin/fir/FirSession;)Lcom/bivektor/lombokt/fir/services/EqualsAndHashCodeService;
+}
+
+public final class com/bivektor/lombokt/fir/services/ToStringService : com/bivektor/lombokt/fir/services/AnnotatedClassMatchingService {
+	public fun <init> (Lorg/jetbrains/kotlin/fir/FirSession;)V
+	public final fun checkClass (Lorg/jetbrains/kotlin/fir/declarations/FirClass;Lorg/jetbrains/kotlin/fir/analysis/checkers/context/CheckerContext;Lorg/jetbrains/kotlin/diagnostics/DiagnosticReporter;)V
+	public final fun getToStringFunction ()Lcom/bivektor/lombokt/fir/NamedFunctionDescriptor;
+	public final fun isFunctionDeclaredOrNotOverridable (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
+	public final fun isSuitableClassType (Lorg/jetbrains/kotlin/fir/symbols/impl/FirClassSymbol;)Z
+}
+
+public final class com/bivektor/lombokt/fir/services/ToStringServiceKt {
+	public static final fun getToStringService (Lorg/jetbrains/kotlin/fir/FirSession;)Lcom/bivektor/lombokt/fir/services/ToStringService;
+}
+
+public abstract class com/bivektor/lombokt/ir/AbstractClassFunctionBlockBodyBuilder : org/jetbrains/kotlin/ir/builders/IrBlockBodyBuilder {
+	public fun <init> (Lorg/jetbrains/kotlin/ir/declarations/IrFunction;Lorg/jetbrains/kotlin/ir/builders/IrGeneratorContext;Lorg/jetbrains/kotlin/ir/builders/Scope;II)V
+	protected final fun irGetProperty (Lorg/jetbrains/kotlin/ir/expressions/IrExpression;Lorg/jetbrains/kotlin/ir/declarations/IrProperty;)Lorg/jetbrains/kotlin/ir/expressions/IrDeclarationReference;
+	protected final fun irGetThisField (Lorg/jetbrains/kotlin/ir/declarations/IrField;)Lorg/jetbrains/kotlin/ir/expressions/impl/IrGetFieldImpl;
+	protected final fun irGetThisProperty (Lorg/jetbrains/kotlin/ir/declarations/IrProperty;)Lorg/jetbrains/kotlin/ir/expressions/IrDeclarationReference;
+	protected final fun irThis ()Lorg/jetbrains/kotlin/ir/expressions/IrExpression;
+}
+
+public final class com/bivektor/lombokt/ir/BuildableIrBodyGenerator {
+	public static final field INSTANCE Lcom/bivektor/lombokt/ir/BuildableIrBodyGenerator;
+	public final fun processClass (Lorg/jetbrains/kotlin/ir/declarations/IrClass;Lorg/jetbrains/kotlin/backend/common/extensions/IrPluginContext;)V
+}
+
+public final class com/bivektor/lombokt/ir/EqualsAndHashCodeIrBodyGenerator {
+	public fun <init> (Lorg/jetbrains/kotlin/ir/declarations/IrClass;Lorg/jetbrains/kotlin/backend/common/extensions/IrPluginContext;Lorg/jetbrains/kotlin/cli/common/messages/MessageCollector;)V
+	public final fun processClass ()V
+}
+
+public final class com/bivektor/lombokt/ir/LomboktIrGenerationExtension : org/jetbrains/kotlin/backend/common/extensions/IrGenerationExtension {
+	public fun <init> (Lorg/jetbrains/kotlin/cli/common/messages/MessageCollector;)V
+	public fun generate (Lorg/jetbrains/kotlin/ir/declarations/IrModuleFragment;Lorg/jetbrains/kotlin/backend/common/extensions/IrPluginContext;)V
+	public fun resolveSymbol (Lorg/jetbrains/kotlin/ir/symbols/IrSymbol;Lorg/jetbrains/kotlin/ir/builders/TranslationPluginContext;)Lorg/jetbrains/kotlin/ir/declarations/IrDeclaration;
+}
+
+public final class com/bivektor/lombokt/ir/ToStringIrBodyGenerator {
+	public fun <init> (Lorg/jetbrains/kotlin/backend/common/extensions/IrPluginContext;Lorg/jetbrains/kotlin/cli/common/messages/MessageCollector;)V
+	public final fun processSimpleFunction (Lorg/jetbrains/kotlin/ir/declarations/IrSimpleFunction;)V
+}
+
