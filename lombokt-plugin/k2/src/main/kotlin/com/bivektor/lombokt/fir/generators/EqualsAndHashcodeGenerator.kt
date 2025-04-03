@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.fir.extensions.MemberGenerationContext
 import org.jetbrains.kotlin.fir.plugin.createMemberFunction
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.Name
 
@@ -27,21 +28,21 @@ open class EqualsAndHashcodeGenerator(
 
   override fun getCallableNamesForClass(classSymbol: FirClassSymbol<*>, context: MemberGenerationContext): Set<Name> {
     if (!isSuitableClass(classSymbol)) return emptySet()
-
-    // TODO - LOMBOKT-17 - We put this check here because we don't want to do it twice for each method. Is it ok?
-    if (equalsAndHashCodeService.isAnyFunctionDeclaredOrNotOverridable(classSymbol)) return emptySet()
-
     return setOf(equalsFunction.name, hashCodeFunction.name)
   }
 
-  private fun isSuitableClass(classSymbol: FirClassSymbol<*>) =
-    equalsAndHashCodeService.isSuitableClassType(classSymbol) && equalsAndHashCodeService.isAnnotated(classSymbol)
+  private fun isSuitableClass(classSymbol: FirClassSymbol<*>): Boolean {
+    if (classSymbol !is FirRegularClassSymbol) return false
+    return equalsAndHashCodeService.isSuitableClassType(classSymbol) && equalsAndHashCodeService.isAnnotated(classSymbol)
+  }
 
   override fun generateFunctions(
     callableId: CallableId,
     context: MemberGenerationContext?
   ): List<FirNamedFunctionSymbol> {
     val classSymbol = context?.owner ?: return emptyList()
+    if (equalsAndHashCodeService.isAnyFunctionDeclaredOrNotOverridable(classSymbol)) return emptyList()
+
     val callableName = callableId.callableName
     return when (callableName) {
       equalsFunction.name -> listOf(generateEqualsMethod(classSymbol).symbol)

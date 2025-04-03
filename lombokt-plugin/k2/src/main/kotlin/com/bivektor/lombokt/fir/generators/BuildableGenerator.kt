@@ -21,7 +21,6 @@ import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 
-
 private val builderPropertiesCallableName = Name.identifier("Lombokt.builderClassProperties")
 
 class BuildableGenerator(session: FirSession) : FirDeclarationGenerationExtension(session) {
@@ -29,10 +28,8 @@ class BuildableGenerator(session: FirSession) : FirDeclarationGenerationExtensio
   private val buildableService: BuildableService by lazy { session.buildableService }
 
   override fun getCallableNamesForClass(classSymbol: FirClassSymbol<*>, context: MemberGenerationContext): Set<Name> {
-    // All these checks are necessary because even FIR declaration checker fails, our generator methods below may still run causing unexpected errors
-    if (!buildableService.isSuitableBuilderClassType(classSymbol)) return emptySet()
     if (!buildableService.isBuilderClass(classSymbol)) return emptySet()
-    if (!buildableService.isSuitableBuildableClassType(classSymbol.getContainingClassSymbol() as FirClassSymbol<*>)) return emptySet()
+    if (!buildableService.isSuitableBuilderClassType(classSymbol)) return emptySet()
     return setOf(builderPropertiesCallableName)
   }
 

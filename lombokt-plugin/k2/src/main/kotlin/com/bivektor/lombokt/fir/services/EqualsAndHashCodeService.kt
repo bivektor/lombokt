@@ -20,10 +20,10 @@ import org.jetbrains.kotlin.fir.declarations.utils.isData
 import org.jetbrains.kotlin.fir.declarations.utils.isInline
 import org.jetbrains.kotlin.fir.declarations.utils.isInner
 import org.jetbrains.kotlin.fir.declarations.utils.isLocal
-import org.jetbrains.kotlin.fir.symbols.impl.FirAnonymousObjectSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 import com.bivektor.lombokt.LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME as ANNOTATION_NAME
@@ -85,12 +85,11 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
   }
 
   fun isSuitableClassType(symbol: FirClassSymbol<*>): Boolean {
+    if (symbol !is FirRegularClassSymbol) return false
+
     return when {
       // Allow only regular classes not objects, enum classes & entries, interfaces, annotation classes
       symbol.classKind != ClassKind.CLASS -> false
-
-      // Disallow anonymous objects
-      symbol is FirAnonymousObjectSymbol -> false
 
       // Disallow special types
       symbol.isInline || symbol.isValueClass || symbol.isLocal || symbol.isInner -> false

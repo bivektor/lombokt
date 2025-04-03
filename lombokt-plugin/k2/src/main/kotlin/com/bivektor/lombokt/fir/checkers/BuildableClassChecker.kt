@@ -8,13 +8,11 @@ import com.bivektor.lombokt.fir.services.BuildableService
 import com.bivektor.lombokt.fir.services.buildableService
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
+import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
-import org.jetbrains.kotlin.fir.declarations.FirClass
-import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
-import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
-import org.jetbrains.kotlin.fir.declarations.primaryConstructorIfAny
+import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.resolve.getContainingDeclaration
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 
@@ -31,7 +29,7 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
   ) {
     val session = context.session
     val service = session.buildableService
-    if (service.isBuilderClass(declaration.symbol)) {
+    if (declaration.hasBuilderAnnotation(session)) {
       val containingClass = declaration.getContainingDeclaration(session) as? FirClass
       val buildableAnnotation = containingClass?.getAnnotationByClassId(BUILDABLE_ANNOTATION_ID, session)
 
@@ -47,8 +45,8 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
       return checkBuilderClass(service, declaration, containingClass, context, reporter)
     }
 
-    if (service.isBuildableClass(declaration.symbol)) {
-      val builderClass = declaration.declarations.filterIsInstance<FirClass>().find { service.isBuilderClass(it.symbol) }
+    if (declaration.hasBuildableAnnotation(session)) {
+      val builderClass = declaration.declarations.filterIsInstance<FirClass>().find { it.hasBuilderAnnotation(session) }
       if (builderClass == null)
         return reporter.reportOn(
           declaration.source,
@@ -107,5 +105,11 @@ object BuildableClassChecker : FirClassChecker(MppCheckerKind.Common) {
 
     }
   }
+
+  private fun FirClass.hasBuilderAnnotation(session: FirSession): Boolean =
+    hasAnnotation(BUILDER_ANNOTATION_ID, session)
+
+  private fun FirClass.hasBuildableAnnotation(session: FirSession): Boolean =
+    hasAnnotation(BUILDABLE_ANNOTATION_ID, session)
 }
 

@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.fir.extensions.MemberGenerationContext
 import org.jetbrains.kotlin.fir.plugin.createMemberFunction
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.Name
 
@@ -31,6 +32,7 @@ open class ToStringGenerator(
   }
 
   private fun isSuitableClass(classSymbol: FirClassSymbol<*>): Boolean {
+    if (classSymbol !is FirRegularClassSymbol) return false
     return toStringService.isSuitableClassType(classSymbol) && toStringService.isAnnotated(classSymbol)
   }
 
