@@ -5,7 +5,6 @@ import com.bivektor.lombokt.LomboktNames.EQUALS_METHOD_NAME
 import com.bivektor.lombokt.LomboktNames.HASHCODE_METHOD_NAME
 import com.bivektor.lombokt.PluginKeys
 import com.bivektor.lombokt.isGeneratedByPluginKey
-import getConstValueByName
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.irNot
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
@@ -16,7 +15,6 @@ import org.jetbrains.kotlin.ir.declarations.impl.IrVariableImpl
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
-import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetValueImpl
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
@@ -24,8 +22,6 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.symbols.impl.IrVariableSymbolImpl
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.isArray
-import org.jetbrains.kotlin.ir.types.isNullable
-import org.jetbrains.kotlin.ir.types.isNullableAny
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
@@ -43,7 +39,7 @@ class EqualsAndHashCodeIrBodyGenerator(
 
   @OptIn(UnsafeDuringIrConstructionAPI::class)
   private val primaryConstructorParams =
-    if (annotationConfig != null && irClass.isData) irClass.primaryConstructor!!.valueParameters.map { it.name } else emptyList()
+    if (annotationConfig != null && irClass.isData) irClass.primaryConstructor!!.parameters.map { it.name } else emptyList()
 
   @OptIn(UnsafeDuringIrConstructionAPI::class)
   @Suppress("UNUSED_ANONYMOUS_PARAMETER")
@@ -115,7 +111,7 @@ private class EqualsAndHashCodeFunctionBuilder(
 ) : AbstractClassFunctionBlockBodyBuilder(irFunction, context, Scope(irFunction.symbol), startOffset, endOffset) {
 
   private fun irOther(): IrExpression {
-    val irFirstParameter = irFunction.valueParameters[0]
+    val irFirstParameter = irFunction.regularParameters.first()
     return IrGetValueImpl(
       startOffset, endOffset,
       irFirstParameter.type,
@@ -123,18 +119,17 @@ private class EqualsAndHashCodeFunctionBuilder(
     )
   }
 
+  @OptIn(UnsafeDuringIrConstructionAPI::class)
   fun generateEqualsMethodBody() {
     val irType = irClass.defaultType
     if (config.callSuper) {
-      val superFn = resolveSuperFunction(irFunction) {
-        it.name == EQUALS_METHOD_NAME && it.valueParameters.size == 1 && it.valueParameters[0].type.isNullableAny()
-      }
+      val superFn = resolveSuperFunction(irFunction) { it.isObjectEquals }
 
       +irIfThenReturnFalse(
         irNot(irCall(superFn.symbol).apply {
           dispatchReceiver = irThis()
           superQualifierSymbol = superFn.parentAsClass.symbol
-          putValueArgument(0, irOther())
+          arguments[1] = irOther()
         })
       )
     }
@@ -156,7 +151,7 @@ private class EqualsAndHashCodeFunctionBuilder(
           hasDispatchReceiver = true,
           hasExtensionReceiver = false,
           origin = IrStatementOrigin.EXCLEQ,
-        ).apply<IrCallImpl> {
+        ).apply {
           dispatchReceiver =
             this@EqualsAndHashCodeFunctionBuilder.irEquals(arg1, arg2, origin = IrStatementOrigin.EXCLEQ)
         }
@@ -168,7 +163,7 @@ private class EqualsAndHashCodeFunctionBuilder(
   @OptIn(UnsafeDuringIrConstructionAPI::class)
   fun generateHashCodeMethodBody(constHashCode: Int) {
     val initialValue = if (config.callSuper) {
-      val superFn = resolveSuperFunction(irFunction) { it.name == HASHCODE_METHOD_NAME && it.valueParameters.isEmpty() }
+      val superFn = resolveSuperFunction(irFunction) { it.isObjectHashCode }
       irCall(superFn.symbol).apply {
         dispatchReceiver = irThis()
         superQualifierSymbol = superFn.parentAsClass.symbol
@@ -208,7 +203,7 @@ private class EqualsAndHashCodeFunctionBuilder(
         hasExtensionReceiver = false,
       ).apply {
         dispatchReceiver = shiftedResult
-        putValueArgument(0, getHashCodeOfProperty(property, config.doNotUseGetters))
+        arguments[1] = getHashCodeOfProperty(property, config.doNotUseGetters)
       }
       +irSet(irResultVar.symbol, irRhs)
     }
@@ -225,6 +220,7 @@ private class EqualsAndHashCodeFunctionBuilder(
     return irGetProperty(receiver, property)
   }
 
+  @OptIn(UnsafeDuringIrConstructionAPI::class)
   private fun IrBuilderWithScope.shiftResultOfHashCode(irResultVar: IrVariable): IrExpression =
     IrCallImplWithShape(
       startOffset = startOffset,
@@ -238,14 +234,13 @@ private class EqualsAndHashCodeFunctionBuilder(
       hasExtensionReceiver = false,
     ).apply {
       dispatchReceiver = irGet(irResultVar)
-      putValueArgument(0, irInt(31))
+      arguments[1] = irInt(31)
     }
 
   @OptIn(UnsafeDuringIrConstructionAPI::class)
   private fun resolveSuperFunction(fn: IrSimpleFunction, predicate: (IrSimpleFunction) -> Boolean): IrSimpleFunction {
-    return (fn.parentAsClass.superClass ?: context.irBuiltIns.anyClass.owner)
-      .functions
-      .single(predicate)
+    val superClass = fn.parentAsClass.superClass ?: context.irBuiltIns.anyClass.owner
+    return superClass.functions.single(predicate)
   }
 
   private fun getHashCodeOfProperty(property: IrProperty, doNotUseGetter: Boolean): IrExpression {
@@ -286,7 +281,7 @@ private class EqualsAndHashCodeFunctionBuilder(
       if (hasDispatchReceiver) {
         dispatchReceiver = irValue
       } else {
-        putValueArgument(0, irValue)
+        arguments[1] = irValue
       }
     }
   }

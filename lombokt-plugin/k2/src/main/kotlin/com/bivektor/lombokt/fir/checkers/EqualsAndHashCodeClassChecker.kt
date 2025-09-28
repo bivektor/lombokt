@@ -6,13 +6,11 @@ import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
+import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 
 object EqualsAndHashCodeClassChecker : FirClassChecker(MppCheckerKind.Common) {
-  override fun check(
-    declaration: FirClass,
-    context: CheckerContext,
-    reporter: DiagnosticReporter
-  ) {
+  context(context: CheckerContext, reporter: DiagnosticReporter)
+  override fun check(declaration: FirClass) {
     val equalsAndHashCodeService = context.session.equalsAndHashCodeService
     equalsAndHashCodeService.checkClass(declaration, context, reporter)
   }

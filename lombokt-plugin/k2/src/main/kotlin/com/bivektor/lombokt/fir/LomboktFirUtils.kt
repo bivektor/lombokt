@@ -2,7 +2,7 @@ package com.bivektor.lombokt.fir
 
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.fir.FirSession
-import org.jetbrains.kotlin.fir.analysis.checkers.hasModifier
+import org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess
 import org.jetbrains.kotlin.fir.declarations.toAnnotationClassId
 import org.jetbrains.kotlin.fir.declarations.utils.isFinal
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
@@ -11,7 +11,6 @@ import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.isExtension
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
-import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 
@@ -45,8 +44,12 @@ private fun FirClassSymbol<*>.findNamedFunction(
   return null
 }
 
-private fun FirClassSymbol<*>.getDeclaredFunction(predicate: (FirNamedFunctionSymbol) -> Boolean): FirNamedFunctionSymbol? =
-  declarationSymbols.filterIsInstance<FirNamedFunctionSymbol>().firstOrNull(predicate)
+@OptIn(DirectDeclarationsAccess::class)
+private fun FirClassSymbol<*>.getDeclaredFunction(
+  predicate: (FirNamedFunctionSymbol) -> Boolean
+): FirNamedFunctionSymbol? {
+  return declarationSymbols.filterIsInstance<FirNamedFunctionSymbol>().firstOrNull { predicate(it) }
+}
 
 fun FirClassSymbol<*>.findAnnotation(
   session: FirSession, annotationClassId: ClassId, withArguments: Boolean = false
@@ -54,5 +57,3 @@ fun FirClassSymbol<*>.findAnnotation(
   val annotations = if (withArguments) resolvedAnnotationsWithArguments else resolvedAnnotationsWithClassIds
   return annotations.find { it.toAnnotationClassId(session) == annotationClassId }
 }
-
-val FirClassSymbol<*>.isValueClass get() = hasModifier(KtTokens.VALUE_KEYWORD)

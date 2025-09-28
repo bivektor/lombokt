@@ -12,7 +12,6 @@ class LomboktCheckersComponent(session: FirSession) : FirAdditionalCheckersExten
         get() = setOf(
           ToStringClassChecker,
           EqualsAndHashCodeClassChecker,
-          BuildableClassChecker
         )
     }
 }

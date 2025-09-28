@@ -1,22 +1,29 @@
-# lomboKT : Lombok for Kotlin
+# lomboKT: Lombok for Kotlin
 
-A lightweight port of [Project Lombok](https://projectlombok.org/) to Kotlin, providing useful annotations like `@ToString`, `@EqualsAndHashCode` and `@Buildable`.
+A lightweight port of [Project Lombok](https://projectlombok.org/) to Kotlin, providing useful
+annotations like `@ToString`, `@EqualsAndHashCode`.
 
-Kotlin data classes already provide support for toString, equals and hashcode generation but for regular classes, one has to implement these methods manually. This plugin aims to reduce such boilerplate.
+Kotlin data classes already provide support for toString, equals and hashcode generation, but for
+regular classes, one has to implement these methods manually. This plugin aims to reduce such
+boilerplate.
 The plugin also provides basic Builder support mainly for Java Interop.
 
 ## Features
 
 - `@ToString` – Generates a `toString()` method automatically.
 - `@EqualsAndHashCode` – Generates `equals()` and `hashCode()` methods.
-- `@Buildable` - Generates Builder class member bodies
 
-## Requirements
+## Kotlin Compatibility Matrix
 
-- Kotlin JVM (K2 Compiler)
-- Tested with Kotlin JVM 2.1.10
+From `3.1.x` onward, lomboKT package versions include a baseline Kotlin version suffix (for example,
+`-kotlin-2.2.0`). If there is no package for a specific Kotlin patch version (for example, `2.2.10`),
+the nearest published baseline in the same Kotlin minor line (for example, `-kotlin-2.2.0`) is
+expected to support that version.
 
-Currently only JVM platform is supported. K2 compiler is required (languageVersion >= 2.0) and there is no plan to support K1.
+| lomboKT version | Supported Kotlin versions |
+| --- | --- |
+| `3.0.0` | `2.1.x` |
+| `3.1.0-kotlin-2.2.0` | `2.2.0`, `2.2.10` |
 
 ## Installation
 
@@ -24,12 +31,13 @@ Add the dependency to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    compileOnly("com.bivektor.lombokt:lombokt-api:3.0.0-beta.5")
-    kotlinCompilerPluginClasspath("com.bivektor.lombokt:lombokt-plugin:3.0.0-beta.4")
+  compileOnly("com.bivektor.lombokt:lombokt-api:3.1.0-kotlin-2.2.0")
+  kotlinCompilerPluginClasspath("com.bivektor.lombokt:lombokt-plugin:3.1.0-kotlin-2.2.0")
 }
 ```
 
-Please do not use versions before 3.0.0 as they are in fact experimental versions mistakenly published as beta.
+Versions earlier than `3.0.0` were incorrectly published as beta builds. They are experimental and
+should not be used in production.
 
 #### Maven
 
@@ -78,7 +86,8 @@ Full POM can be found in **examples/maven** sample project
 ### `@ToString`
 
 Works for both regular classes and data classes.
-For data classes, supports inclusion of properties defined in the class body and exclusion of specific properties
+For data classes, supports inclusion of properties defined in the class body and exclusion of
+specific properties
 from the primary constructor.
 
 Only fields and getters are included. For a property with backing field, always getter is used.
@@ -89,12 +98,15 @@ import lombokt.ToString
 
 @ToString
 data class User(val username: String, @ToString.Exclude val password: Int) {
-  @ToString.Include(name="emailAddress")
+  @ToString.Include(name = "emailAddress")
   var email: String? = null
 }
 
-@ToString(onlyExplicitlyIncluded=true)
-class Person(@ToString.Include val name: String, @ToString.Include(name="custom") private val surname: String) {
+@ToString(onlyExplicitlyIncluded = true)
+class Person(
+  @ToString.Include val name: String,
+  @ToString.Include(name = "custom") private val surname: String
+) {
 
   @ToString.Include
   val fullName: String get() = "$name $surname"
@@ -110,11 +122,15 @@ Works for both regular classes and data classes.
 Only properties with backing fields are included.
 Access is through getters by default but that can be configured as shown below.
 For data classes, only properties from the primary constructor are considered.
-For non-data classes, all properties including the ones declared in the class body are included by default.
+For non-data classes, all properties including the ones declared in the class body are included by
+default.
 
-Note that, similar to how data classes work, lomboKT just calls `equals` and `hashcode` methods on the property values.
-That's why arrays don't work as expected because of how these methods are defined in the `Array` class.
-Lombok handles this case for Java classes but lomboKT does not have such a special handling, thus one needs to use `List` or similar collection
+Note that, similar to how data classes work, lomboKT just calls `equals` and `hashcode` methods on
+the property values.
+That's why arrays don't work as expected because of how these methods are defined in the `Array`
+class.
+Lombok handles this case for Java classes but lomboKT does not have such a special handling, thus
+one needs to use `List` or similar collection
 
 ```kotlin
 import lombokt.EqualsAndHashCode
@@ -144,7 +160,7 @@ class Order(
     get() = field.uppercase()
 }
 
-@EqualsAndHashCode(doNotUseGetters=true)
+@EqualsAndHashCode(doNotUseGetters = true)
 class Order(
   val orderId: String,
   val items: List<Item>,
@@ -158,7 +174,7 @@ class Order(
 }
 
 
-@EqualsAndHashCode(onlyExplicitlyIncluded=true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 class Order(
   // Only orderId is included
   @EqualsAndHashCode.Include val orderId: String,
@@ -171,76 +187,11 @@ open class Vehicle(val type: String)
 
 // Super class methods are used both for equals and hashCode methods in addition to own properties
 // Do not call super when there is no super class or if you are not sure super class handles equality correctly. See Lombok for more info
-@EqualsAndHashCode(callSuper=true)
+@EqualsAndHashCode(callSuper = true)
 class Car(val model: String) : Vehicle("car")
 
 
 ```
-
-### `@Buildable`
-
-Generates bodies of Builder class methods. Provides basic builder without a separate IDE plugin
-thus, method declarations must be present in the user code.
-
-While Builders often don't bring much benefit for Kotlin, we often feel the need for them for Java interop
-or APIs targeted to Java especially for classes with many constructor arguments.
-
-In those cases, we either switch to Lombok and implement such classes in Javaor implement the Builder manually.
-Implementing Builders in Kotlin is indeed quite simple thanks to `apply` but it is still boilerplate when you have
-several properties
-
-```Kotlin
-
-  @Buildable
-  class Person(
-
-    // Required parameter
-    val name: String,
-
-    // Parameter without property is possible but problematic for creating a builder from existing instance
-    prefix: String? = "Dr.",
-
-    // Nullable parameter with non-null default value
-    val age: Int? = 18,
-
-    // Nullable parameter with null as default value
-    var email: String? = null,
-
-    // Parameter with default value of complex type
-    val profile: Map<String, Any> = emptyMap()
-  ) {
-
-    val fullName = "$prefix $name"
-
-    @Buildable.Builder
-    class Builder {
-      fun name(name: String) = this
-      fun age(age: Int?) = this
-      fun email(email: String?) = this
-      fun profile(profile: Map<String, Any>) = this
-      fun prefix(prefix: String?) = this
-      fun build(): Person = error("not implemented")
-    }
-
-    companion object {
-      @JvmStatic
-      fun builder() = Builder()
-    }
-  }
-
-```
-
-```Kotlin
-  val personFull = Person.builder().name("John").prefix("Mr.").age(25).email("some").profile(profile).build()
-  val personWithDefaults = Person.builder().name("John").build()
-```
-
-* Primary constructor with at least one parameter is required.
-* Both `@Buildable` and `@Builder` annotations are required
-* Annotations can be placed on just regular classes including data classes but not on objects, interfaces, inline, local, enum and value classes.
-* User defined method bodies are dummy placeholders and, lomboKT always overwrites the setter methods and the 'build' method bodies.
-* Constructor can be private which is often the case for a buildable class.
-* Companion builder method is optional as the plugin doesn't check or validate Companion object methods.
 
 ## Contributing
 
@@ -249,4 +200,3 @@ Contributions are welcome! Feel free to open issues and submit pull requests.
 ## License
 
 [Apache License 2](LICENSE)
-

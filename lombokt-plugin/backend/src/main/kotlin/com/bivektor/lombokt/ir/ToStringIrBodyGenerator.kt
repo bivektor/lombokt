@@ -3,12 +3,14 @@ package com.bivektor.lombokt.ir
 import com.bivektor.lombokt.LomboktNames
 import com.bivektor.lombokt.PluginKeys
 import com.bivektor.lombokt.isGeneratedByPluginKey
-import getConstValueByName
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.builders.*
-import org.jetbrains.kotlin.ir.declarations.*
+import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
+import org.jetbrains.kotlin.ir.declarations.IrProperty
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
@@ -46,6 +48,7 @@ class ToStringIrBodyGenerator(
 
     private val parentClass = irFunction.parentAsClass
 
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun generateMethodBody() {
       val result = irConcat()
       result.arguments.add(irString(parentClass.name.asString() + "("))
@@ -65,7 +68,7 @@ class ToStringIrBodyGenerator(
 
       parentClass.acceptChildrenVoid(object : IrVisitorVoid() {
         override fun visitProperty(declaration: IrProperty) {
-          if (declaration.origin != IrDeclarationOrigin.Companion.DEFINED) return
+          if (declaration.origin != IrDeclarationOrigin.DEFINED) return
           if (declaration.getter == null) return
           val hasBackingField = declaration.backingField != null
 
@@ -103,9 +106,9 @@ class ToStringIrBodyGenerator(
 
       return (parentClass.superClass ?: pluginContext.irBuiltIns.anyClass.owner)
         .functions
-        .singleOrNull {
-          it.name == LomboktNames.TO_STRING_METHOD_NAME && it.valueParameters.isEmpty()
-        }!!
+        .single {
+          it.name == LomboktNames.TO_STRING_METHOD_NAME && !it.regularParameters.iterator().hasNext()
+        }
     }
   }
 

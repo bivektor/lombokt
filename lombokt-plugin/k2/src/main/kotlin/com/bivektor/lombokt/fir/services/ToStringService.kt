@@ -7,7 +7,6 @@ import com.bivektor.lombokt.fir.checkers.LomboktDiagnostics
 import com.bivektor.lombokt.fir.checkers.LomboktDiagnostics.UNSUPPORTED_CLASS_TYPE
 import com.bivektor.lombokt.fir.findAnnotation
 import com.bivektor.lombokt.fir.isFunctionDeclaredOrNotOverridable
-import com.bivektor.lombokt.fir.isValueClass
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
@@ -15,6 +14,7 @@ import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.utils.isInline
+import org.jetbrains.kotlin.fir.declarations.utils.isInlineOrValue
 import org.jetbrains.kotlin.fir.declarations.utils.isLocal
 import org.jetbrains.kotlin.fir.symbols.impl.FirAnonymousObjectSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
@@ -61,7 +61,7 @@ class ToStringService(session: FirSession) : AnnotatedClassMatchingService(sessi
       symbol is FirAnonymousObjectSymbol -> false
 
       // Disallow special types
-      symbol.isInline || symbol.isValueClass || symbol.isLocal -> false
+      symbol.isInlineOrValue || symbol.isLocal -> false
 
       else -> true
     }

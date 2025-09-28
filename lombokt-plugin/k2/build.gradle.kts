@@ -3,3 +3,9 @@ dependencies {
   implementation(project(":lombokt-plugin:backend"))
   compileOnly(kotlin("compiler-embeddable"))
 }
+
+kotlin {
+  compilerOptions {
+    freeCompilerArgs.add("-Xcontext-parameters")
+  }
+}

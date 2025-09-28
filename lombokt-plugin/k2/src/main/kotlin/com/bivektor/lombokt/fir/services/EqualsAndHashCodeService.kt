@@ -7,17 +7,18 @@ import com.bivektor.lombokt.fir.checkers.LomboktDiagnostics
 import com.bivektor.lombokt.fir.checkers.LomboktDiagnostics.UNSUPPORTED_CLASS_TYPE
 import com.bivektor.lombokt.fir.findAnnotation
 import com.bivektor.lombokt.fir.isFunctionDeclaredOrNotOverridable
-import com.bivektor.lombokt.fir.isValueClass
 import org.jetbrains.kotlin.KtFakeSourceElementKind
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
+import org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.declarations.utils.isData
 import org.jetbrains.kotlin.fir.declarations.utils.isInline
+import org.jetbrains.kotlin.fir.declarations.utils.isInlineOrValue
 import org.jetbrains.kotlin.fir.declarations.utils.isInner
 import org.jetbrains.kotlin.fir.declarations.utils.isLocal
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
@@ -44,6 +45,7 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
     equalsFunction.predicate(it) || hashCodeFunction.predicate(it)
   }
 
+  @OptIn(DirectDeclarationsAccess::class)
   fun checkClass(declaration: FirClass, context: CheckerContext, reporter: DiagnosticReporter) {
     val classSymbol = declaration.symbol
     val annotation = classSymbol.findAnnotation(session, annotationClassId) ?: return
@@ -92,7 +94,7 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
       symbol.classKind != ClassKind.CLASS -> false
 
       // Disallow special types
-      symbol.isInline || symbol.isValueClass || symbol.isLocal || symbol.isInner -> false
+      symbol.isInlineOrValue || symbol.isLocal || symbol.isInner -> false
 
       else -> true
     }

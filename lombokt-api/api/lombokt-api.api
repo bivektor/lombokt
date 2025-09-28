@@ -1,9 +1,3 @@
-public abstract interface annotation class lombokt/Buildable : java/lang/annotation/Annotation {
-}
-
-public abstract interface annotation class lombokt/Buildable$Builder : java/lang/annotation/Annotation {
-}
-
 public abstract interface annotation class lombokt/EqualsAndHashCode : java/lang/annotation/Annotation {
 	public abstract fun callSuper ()Z
 	public abstract fun doNotUseGetters ()Z

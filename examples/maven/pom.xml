@@ -12,8 +12,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <kotlin.code.style>official</kotlin.code.style>
     <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
-    <lombokt.version>3.0.0-beta.5</lombokt.version>
-    <kotlin.version>2.1.10</kotlin.version>
+    <lombokt.version>3.1.0-kotlin-2.2.0</lombokt.version>
+    <kotlin.version>2.2.0</kotlin.version>
   </properties>
 
   <build>

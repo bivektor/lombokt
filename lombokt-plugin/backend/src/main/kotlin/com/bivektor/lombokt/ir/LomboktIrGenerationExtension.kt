@@ -37,7 +37,6 @@ class LomboktIrGenerationExtension(private val messageCollector: MessageCollecto
     override fun visitClass(declaration: IrClass) {
       super.visitClass(declaration)
       EqualsAndHashCodeIrBodyGenerator(declaration, pluginContext, messageCollector).processClass()
-      BuildableIrBodyGenerator.processClass(declaration, pluginContext)
     }
 
     override fun visitSimpleFunction(declaration: IrSimpleFunction) {
