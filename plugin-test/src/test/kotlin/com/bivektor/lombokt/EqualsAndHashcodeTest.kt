@@ -25,6 +25,10 @@ class EqualsAndHashcodeTest {
   @EqualsAndHashCode(callSuper = true)
   private class WithSuperClass(baseId: Int, val name: String) : BaseEntity(baseId)
 
+  // Warning: callSuper without super class
+  @EqualsAndHashCode(callSuper = true)
+  class CallSuperWithoutSuperClass(val name: String)
+
   @Test
   fun `test callSuper equals and hashCode`() {
     val obj1 = WithSuperClass(1, "Alice")
@@ -86,36 +90,44 @@ class EqualsAndHashcodeTest {
     assertEquals(obj1.hashCode(), calculateHashCode(1))
   }
 
-  // Case: Equals or hashcode already declared or final in super class
-  @EqualsAndHashCode(callSuper = true)
-  private open class MethodsAlreadyDeclared(val id: Int) {
-    final override fun equals(other: Any?): Boolean {
+  // Warning: Equals or hashcode already declared
+  @EqualsAndHashCode
+  private open class MethodsDeclared(val id: Int) {
+    override fun equals(other: Any?): Boolean {
       if (this === other) return true
-      if (other !is MethodsAlreadyDeclared) return false
+      if (other !is MethodsDeclared) return false
       return id == other.id
     }
 
-    final override fun hashCode(): Int = id
+    override fun hashCode(): Int = id
   }
 
+  // Warning: Equals or hashcode already declared or final in super class
+  @EqualsAndHashCode
+  private open class MethodsDeclaredFinal(id: Int): MethodsDeclared(id) {
+    final override fun equals(other: Any?): Boolean = super.equals(other)
+    final override fun hashCode(): Int = super.hashCode()
+  }
+
+  // Warning: methods already declared
   @EqualsAndHashCode(callSuper = true)
-  private class MethodsAlreadyDeclaredSubclass(id: Int, val name: String = "name") : MethodsAlreadyDeclared(id)
+  private class MethodsDeclaredFinalOnSuper(id: Int, val name: String = "name") : MethodsDeclaredFinal(id)
 
   @Test
   fun `methods not generated when already declared`() {
-    val obj1 = MethodsAlreadyDeclared(1)
-    val obj2 = MethodsAlreadyDeclared(1)
-    val obj3 = MethodsAlreadyDeclared(2)
+    val obj1 = MethodsDeclared(99)
+    val obj2 = MethodsDeclared(99)
+    val obj3 = MethodsDeclared(199)
 
     assertEquals(obj1, obj2)
+    assertEquals(obj1.hashCode(), 99)
     assertNotEquals(obj1, obj3)
-    assertEquals(obj1.hashCode(), 1)
   }
 
   @Test
   fun `methods not generated when they are final in super class`() {
-    val obj1 = MethodsAlreadyDeclaredSubclass(1, "a")
-    val obj2 = MethodsAlreadyDeclaredSubclass(1, "b")
+    val obj1 = MethodsDeclaredFinalOnSuper(1, "a")
+    val obj2 = MethodsDeclaredFinalOnSuper(1, "b")
 
     assertEquals(obj1, obj2)
     assertEquals(obj1.hashCode(), 1)
@@ -196,6 +208,13 @@ class EqualsAndHashcodeTest {
   @EqualsAndHashCode(onlyExplicitlyIncluded = true)
   private data class DataClassExplicit(@EqualsAndHashCode.Include val name: String, var age: Int) {
     var excludedByDefault: Int = 1
+  }
+
+  @EqualsAndHashCode
+  private data class DataClassIncludePropertyWarning(val name: String) {
+    // Uncommenting this line should fail compilation because properties in data classes are not supported
+    // @EqualsAndHashCode.Include
+    val age: Int = 1
   }
 
   @Test
@@ -286,4 +305,3 @@ private fun calculateHashCode(vararg values: Any?): Int {
 
 @EqualsAndHashCode
 class EqualsAndHashCodeTopLevel(val name: String)
-

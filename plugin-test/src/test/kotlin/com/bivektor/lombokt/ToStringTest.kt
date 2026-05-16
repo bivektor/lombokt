@@ -182,7 +182,6 @@ class ToStringTest {
 
   @Test
   fun objectTests() {
-    @Suppress("RemoveRedundantQualifierName")
     assertEquals("TestObject(id=id, createdBy=user, surname=Doe, email=null, computed=computed)", TestObject.toString())
     assertEquals("declared", TestObjectWithDeclaredMethod.toString())
   }
@@ -230,7 +229,7 @@ class ToStringTest {
 
   @Test
   fun testGeneric() {
-    val base = ToStringGeneric<String>("John")
+    val base = ToStringGeneric("John")
     assertEquals("ToStringGeneric(name=John, surname=null)", base.toString())
 
     val derived = ToStringGenericDerived<String, Int>("John").apply { age = 10 }

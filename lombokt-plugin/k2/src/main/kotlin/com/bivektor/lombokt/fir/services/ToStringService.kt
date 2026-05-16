@@ -7,13 +7,13 @@ import com.bivektor.lombokt.fir.checkers.LomboktDiagnostics
 import com.bivektor.lombokt.fir.checkers.LomboktDiagnostics.UNSUPPORTED_CLASS_TYPE
 import com.bivektor.lombokt.fir.findAnnotation
 import com.bivektor.lombokt.fir.isFunctionDeclaredOrNotOverridable
+import com.bivektor.lombokt.fir.reportCallSuperWithoutSuperClass
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.declarations.FirClass
-import org.jetbrains.kotlin.fir.declarations.utils.isInline
 import org.jetbrains.kotlin.fir.declarations.utils.isInlineOrValue
 import org.jetbrains.kotlin.fir.declarations.utils.isLocal
 import org.jetbrains.kotlin.fir.symbols.impl.FirAnonymousObjectSymbol
@@ -30,7 +30,7 @@ class ToStringService(session: FirSession) : AnnotatedClassMatchingService(sessi
 
   fun checkClass(declaration: FirClass, context: CheckerContext, reporter: DiagnosticReporter) {
     val classSymbol = declaration.symbol
-    val annotation = classSymbol.findAnnotation(session, toStringAnnotationClassId) ?: return
+    val annotation = classSymbol.findAnnotation(session, toStringAnnotationClassId, withArguments = true) ?: return
     if (!isSuitableClassType(classSymbol)) {
       reporter.reportOn(
         annotation.source,
@@ -50,6 +50,8 @@ class ToStringService(session: FirSession) : AnnotatedClassMatchingService(sessi
         context
       )
     }
+
+    annotation.reportCallSuperWithoutSuperClass(session, declaration, context, reporter)
   }
 
   fun isSuitableClassType(symbol: FirClassSymbol<*>): Boolean {

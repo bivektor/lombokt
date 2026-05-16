@@ -24,7 +24,7 @@ class LomboktIrGenerationExtension(private val messageCollector: MessageCollecto
     private val messageCollector: MessageCollector
   ) : IrVisitorVoid() {
 
-    private val toStringGenerator = ToStringIrBodyGenerator(pluginContext, messageCollector)
+    private val toStringGenerator = ToStringIrBodyGenerator(pluginContext)
 
     override fun visitElement(element: IrElement) {
       when (element) {

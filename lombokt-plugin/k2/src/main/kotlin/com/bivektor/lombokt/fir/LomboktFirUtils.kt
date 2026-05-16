@@ -1,11 +1,17 @@
 package com.bivektor.lombokt.fir
 
+import com.bivektor.lombokt.fir.checkers.LomboktDiagnostics
 import org.jetbrains.kotlin.descriptors.ClassKind
+import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
+import org.jetbrains.kotlin.diagnostics.reportOn
 import org.jetbrains.kotlin.fir.FirSession
+import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess
+import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.toAnnotationClassId
 import org.jetbrains.kotlin.fir.declarations.utils.isFinal
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
+import org.jetbrains.kotlin.fir.expressions.FirLiteralExpression
 import org.jetbrains.kotlin.fir.resolve.toClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
@@ -13,6 +19,7 @@ import org.jetbrains.kotlin.fir.symbols.impl.isExtension
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.StandardClassIds
 
 data class NamedFunctionDescriptor(val name: Name, val valueParameterTypes: List<ConeKotlinType>) {
   val predicate: (FirNamedFunctionSymbol) -> Boolean = {
@@ -56,4 +63,29 @@ fun FirClassSymbol<*>.findAnnotation(
 ): FirAnnotation? {
   val annotations = if (withArguments) resolvedAnnotationsWithArguments else resolvedAnnotationsWithClassIds
   return annotations.find { it.toAnnotationClassId(session) == annotationClassId }
+}
+
+fun FirClassSymbol<*>.hasNonAnySuperClass(session: FirSession): Boolean {
+  return resolvedSuperTypes.any { superType ->
+    val classSymbol = superType.toClassSymbol(session) ?: return@any false
+    classSymbol.classKind == ClassKind.CLASS && classSymbol.classId != StandardClassIds.Any
+  }
+}
+
+fun FirAnnotation.reportCallSuperWithoutSuperClass(
+  session: FirSession,
+  declaredClass: FirClass,
+  context: CheckerContext,
+  reporter: DiagnosticReporter
+) {
+  val callSuperExpr = argumentMapping.mapping[Name.identifier("callSuper")]
+  val callSuper = (callSuperExpr as? FirLiteralExpression)?.value as? Boolean ?: false
+  if (callSuper && !declaredClass.symbol.hasNonAnySuperClass(session)) {
+    reporter.reportOn(
+      source,
+      LomboktDiagnostics.CALL_SUPER_NO_SUPER_CLASS,
+      "'callSuper' is set to true but the class has no super class.",
+      context
+    )
+  }
 }

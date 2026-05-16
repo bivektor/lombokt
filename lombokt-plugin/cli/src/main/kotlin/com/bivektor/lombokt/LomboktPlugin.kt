@@ -16,6 +16,5 @@ class LomboktComponentRegistrar : CompilerPluginRegistrar() {
     FirExtensionRegistrarAdapter.registerExtension(LomboktFirExtensionRegistrar())
   }
 
-  override val supportsK2: Boolean
-    get() = true
+  override val supportsK2: Boolean get() = true
 }

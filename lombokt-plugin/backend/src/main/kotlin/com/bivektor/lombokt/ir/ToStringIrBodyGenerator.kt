@@ -4,8 +4,6 @@ import com.bivektor.lombokt.LomboktNames
 import com.bivektor.lombokt.PluginKeys
 import com.bivektor.lombokt.isGeneratedByPluginKey
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
@@ -20,8 +18,7 @@ import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.name.Name
 
 class ToStringIrBodyGenerator(
-  private val pluginContext: IrPluginContext,
-  private val messageCollector: MessageCollector
+  private val pluginContext: IrPluginContext
 ) {
   fun processSimpleFunction(declaration: IrSimpleFunction) {
     if (!declaration.isGeneratedByPluginKey(PluginKeys.ToStringKey)) return
@@ -98,12 +95,6 @@ class ToStringIrBodyGenerator(
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun resolveSuperFunction(fn: IrSimpleFunction): IrSimpleFunction {
       val parentClass = fn.parentAsClass
-      if (parentClass.superClass == null)
-        messageCollector.report(
-          CompilerMessageSeverity.WARNING,
-          "ToString on ${parentClass.kotlinFqName} requires super call but the class has no super class"
-        )
-
       return (parentClass.superClass ?: pluginContext.irBuiltIns.anyClass.owner)
         .functions
         .single {

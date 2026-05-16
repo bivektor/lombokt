@@ -7,6 +7,7 @@ import com.bivektor.lombokt.fir.checkers.LomboktDiagnostics
 import com.bivektor.lombokt.fir.checkers.LomboktDiagnostics.UNSUPPORTED_CLASS_TYPE
 import com.bivektor.lombokt.fir.findAnnotation
 import com.bivektor.lombokt.fir.isFunctionDeclaredOrNotOverridable
+import com.bivektor.lombokt.fir.reportCallSuperWithoutSuperClass
 import org.jetbrains.kotlin.KtFakeSourceElementKind
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
@@ -17,7 +18,6 @@ import org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.declarations.utils.isData
-import org.jetbrains.kotlin.fir.declarations.utils.isInline
 import org.jetbrains.kotlin.fir.declarations.utils.isInlineOrValue
 import org.jetbrains.kotlin.fir.declarations.utils.isInner
 import org.jetbrains.kotlin.fir.declarations.utils.isLocal
@@ -48,7 +48,7 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
   @OptIn(DirectDeclarationsAccess::class)
   fun checkClass(declaration: FirClass, context: CheckerContext, reporter: DiagnosticReporter) {
     val classSymbol = declaration.symbol
-    val annotation = classSymbol.findAnnotation(session, annotationClassId) ?: return
+    val annotation = classSymbol.findAnnotation(session, annotationClassId, withArguments = true) ?: return
     if (!isSuitableClassType(classSymbol)) {
       reporter.reportOn(
         annotation.source,
@@ -68,6 +68,8 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
         context
       )
     }
+
+    annotation.reportCallSuperWithoutSuperClass(session, declaration, context, reporter)
 
     if (classSymbol.isData) {
       for (prop in classSymbol.declarationSymbols.filterIsInstance<FirPropertySymbol>()) {
@@ -90,7 +92,7 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
     if (symbol !is FirRegularClassSymbol) return false
 
     return when {
-      // Allow only regular classes not objects, enum classes & entries, interfaces, annotation classes
+      // Allow only regular classes, not objects, enum classes & entries, interfaces, annotation classes
       symbol.classKind != ClassKind.CLASS -> false
 
       // Disallow special types
