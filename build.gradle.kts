@@ -7,6 +7,6 @@ subprojects {
 }
 
 apiValidation {
-  ignoredProjects += project(":lombokt-plugin").subprojects.map { it.name }
-  ignoredProjects += subprojects.filter { it.name.contains("test") }.map { it.name }
+  val validatedProjects = setOf("lombokt-api", "lombokt-maven")
+  ignoredProjects += subprojects.filter { it.name !in validatedProjects }.map { it.name }
 }
