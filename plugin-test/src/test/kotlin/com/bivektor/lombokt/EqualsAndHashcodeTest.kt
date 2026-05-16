@@ -211,10 +211,17 @@ class EqualsAndHashcodeTest {
   }
 
   @EqualsAndHashCode
-  private data class DataClassIncludePropertyWarning(val name: String) {
-    // Uncommenting this line should fail compilation because properties in data classes are not supported
+  private data class UnsupportedDataClassProperty(val name: String) {
+    // Error: Unsupported data class property. Uncomment to verify
     // @EqualsAndHashCode.Include
     val age: Int = 1
+  }
+
+  @EqualsAndHashCode
+  private class UnsupportedProperty(val name: String) {
+    // Error: Unsupported. Requires backing field. Uncomment to verify
+    // @EqualsAndHashCode.Include
+    val age: Int get() = 10
   }
 
   @Test

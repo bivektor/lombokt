@@ -13,16 +13,13 @@ import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
 
-class LomboktIrGenerationExtension(private val messageCollector: MessageCollector) : IrGenerationExtension {
+class LomboktIrGenerationExtension() : IrGenerationExtension {
 
   override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
-    moduleFragment.acceptVoid(LomboktIrTransformer(pluginContext, messageCollector))
+    moduleFragment.acceptVoid(LomboktIrTransformer(pluginContext))
   }
 
-  private class LomboktIrTransformer(
-    private val pluginContext: IrPluginContext,
-    private val messageCollector: MessageCollector
-  ) : IrVisitorVoid() {
+  private class LomboktIrTransformer(private val pluginContext: IrPluginContext) : IrVisitorVoid() {
 
     private val toStringGenerator = ToStringIrBodyGenerator(pluginContext)
 
@@ -36,7 +33,7 @@ class LomboktIrGenerationExtension(private val messageCollector: MessageCollecto
 
     override fun visitClass(declaration: IrClass) {
       super.visitClass(declaration)
-      EqualsAndHashCodeIrBodyGenerator(declaration, pluginContext, messageCollector).processClass()
+      EqualsAndHashCodeIrBodyGenerator(declaration, pluginContext).processClass()
     }
 
     override fun visitSimpleFunction(declaration: IrSimpleFunction) {

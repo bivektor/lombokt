@@ -32,7 +32,6 @@ private val ANNOTATION_NAME = LomboktNames.EQUALS_HASHCODE_ANNOTATION_NAME
 class EqualsAndHashCodeIrBodyGenerator(
   private val irClass: IrClass,
   private val pluginContext: IrPluginContext,
-  private val messageCollector: MessageCollector,
 ) {
   private val annotationConfig: EqualsAndHashCodeAnnotationConfig? =
     irClass.getAnnotation(ANNOTATION_NAME)?.toAnnotationConfig()
@@ -74,17 +73,10 @@ class EqualsAndHashCodeIrBodyGenerator(
       val isEligible = backingField != null && !(irClass.isData && !primaryConstructorParams.contains(name))
 
       if (hasAnnotation(EXCLUDE_ANNOTATION_NAME)) return false
+      if (!isEligible) return false
 
       val explicitlyIncluded = hasAnnotation(INCLUDE_ANNOTATION_NAME)
-      if (explicitlyIncluded && !isEligible)
-        messageCollector.report(
-          CompilerMessageSeverity.EXCEPTION,
-          "Property '$name' on class '${parent.kotlinFqName}' cannot be used for equals/hashCode generation"
-        )
-
-      if (!isEligible) return false
-      if (explicitlyIncluded) return true
-      return !annotationConfig!!.onlyExplicitlyIncluded
+      return explicitlyIncluded || !annotationConfig!!.onlyExplicitlyIncluded
     }
 
   private fun IrConstructorCall.toAnnotationConfig(): EqualsAndHashCodeAnnotationConfig {

@@ -12,7 +12,7 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 @OptIn(ExperimentalCompilerApi::class)
 class LomboktComponentRegistrar : CompilerPluginRegistrar() {
   override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
-    IrGenerationExtension.registerExtension(LomboktIrGenerationExtension(configuration.messageCollector))
+    IrGenerationExtension.registerExtension(LomboktIrGenerationExtension())
     FirExtensionRegistrarAdapter.registerExtension(LomboktFirExtensionRegistrar())
   }
 

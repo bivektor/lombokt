@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.declarations.DirectDeclarationsAccess
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
+import org.jetbrains.kotlin.fir.declarations.utils.hasBackingField
 import org.jetbrains.kotlin.fir.declarations.utils.isData
 import org.jetbrains.kotlin.fir.declarations.utils.isInlineOrValue
 import org.jetbrains.kotlin.fir.declarations.utils.isInner
@@ -71,16 +72,16 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
 
     annotation.reportCallSuperWithoutSuperClass(session, declaration, context, reporter)
 
-    if (classSymbol.isData) {
-      for (prop in classSymbol.declarationSymbols.filterIsInstance<FirPropertySymbol>()) {
-        if (prop.source?.kind != KtFakeSourceElementKind.PropertyFromParameter && prop.hasAnnotation(includeAnnotationClassId, session))
-          reporter.reportOn(
-            prop.source,
-            LomboktDiagnostics.ANNOTATED_DATA_CLASS_BODY_PROPERTY,
-            "Properties declared in data class body cannot be used for equality",
-            context
-          )
-      }
+    for (prop in classSymbol.declarationSymbols.filterIsInstance<FirPropertySymbol>()) {
+      if (!prop.hasAnnotation(includeAnnotationClassId, session)) continue
+      if (prop.canBeUsedForEqualsAndHashCode(classSymbol)) continue
+
+      reporter.reportOn(
+        prop.source,
+        LomboktDiagnostics.INVALID_EQUALITY_MEMBER,
+        "Property '${prop.name}' on class '${classSymbol.classId?.asFqNameString()}' cannot be used for equals/hashCode generation",
+        context
+      )
     }
   }
 
@@ -104,5 +105,10 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
 }
 
 private val HASHCODE_FUNCTION_DESCRIPTOR = NamedFunctionDescriptor(HASHCODE_METHOD_NAME, emptyList())
+
+private fun FirPropertySymbol.canBeUsedForEqualsAndHashCode(classSymbol: FirClassSymbol<*>): Boolean {
+  if (!hasBackingField) return false
+  return !classSymbol.isData || source?.kind == KtFakeSourceElementKind.PropertyFromParameter
+}
 
 val FirSession.equalsAndHashCodeService: EqualsAndHashCodeService by FirSession.sessionComponentAccessor()
