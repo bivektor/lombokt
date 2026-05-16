@@ -54,14 +54,14 @@ annotation class EqualsAndHashCode(
   /**
    * Marks a property for inclusion in the equality logic when [onlyExplicitlyIncluded] is `true`.
    */
-  @Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
+  @Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY)
   @Retention(AnnotationRetention.SOURCE)
   annotation class Include()
 
   /**
    * Excludes a property from the equality logic.
    */
-  @Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
+  @Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY)
   @Retention(AnnotationRetention.SOURCE)
   annotation class Exclude()
 }
