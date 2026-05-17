@@ -4,11 +4,6 @@ plugins {
   id("io.deepmedia.tools.deployer")
 }
 
-the<JavaPluginExtension>().apply {
-  if (hasJavaDocs)
-    withJavadocJar()
-}
-
 the<DeployerExtension>().apply {
   projectInfo {
     val githubRepo: String by project
@@ -33,8 +28,7 @@ the<DeployerExtension>().apply {
   content {
     component {
       fromJava()
-      if (!hasJavaDocs)
-        emptyDocs()
+      emptyDocs()
     }
   }
 
@@ -56,5 +50,3 @@ the<DeployerExtension>().apply {
     }
   }
 }
-
-private val Project.hasJavaDocs get() = pluginManager.hasPlugin("org.jetbrains.dokka")

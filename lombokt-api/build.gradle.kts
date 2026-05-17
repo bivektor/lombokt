@@ -1,5 +1,4 @@
 plugins {
-  id("dokka-conventions")
   id("publishing-conventions")
 }
 
