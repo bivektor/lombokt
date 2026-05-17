@@ -15,15 +15,15 @@ The plugin also provides basic Builder support mainly for Java Interop.
 
 ## Kotlin Compatibility Matrix
 
-From `3.1.x` onward, lomboKT package versions include a baseline Kotlin version suffix (for example,
-`-kotlin-2.2.0`). If there is no package for a specific Kotlin patch version (for example, `2.2.10`),
+lomboKT package versions include a baseline Kotlin version suffix (for example,
+`-kotlin-2.2.0`). If there is no package for a specific Kotlin patch version (for example,
+`2.2.10`),
 the nearest published baseline in the same Kotlin minor line (for example, `-kotlin-2.2.0`) is
 expected to support that version.
 
-| lomboKT version | Supported Kotlin versions |
-| --- | --- |
-| `3.0.0` | `2.1.x` |
-| `3.1.0-kotlin-2.2.0` | `2.2.0`, `2.2.10` |
+| lomboKT version      | Supported Kotlin versions |
+|----------------------|---------------------------|
+| `3.1.0-kotlin-2.2.0` | `2.2.0`, `2.2.10`         |
 
 ## Installation
 
@@ -31,13 +31,13 @@ Add the dependency to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-  compileOnly("com.bivektor.lombokt:lombokt-api:3.1.0-kotlin-2.2.0")
-  kotlinCompilerPluginClasspath("com.bivektor.lombokt:lombokt-plugin:3.1.0-kotlin-2.2.0")
+  compileOnly("com.bivektor.lombokt:lombokt-api:<lombokt-version>")
+  kotlinCompilerPluginClasspath("com.bivektor.lombokt:lombokt-plugin:<lombokt-version>")
 }
 ```
 
-Versions earlier than `3.0.0` were incorrectly published as beta builds. They are experimental and
-should not be used in production.
+Version `3.1.0` is the first stable release. Earlier versions including "beta" builds should
+be considered alpha/experimental.
 
 #### Maven
 
@@ -86,18 +86,20 @@ Full POM can be found in **examples/maven** sample project
 ### `@ToString`
 
 Works for both regular classes and data classes.
-For data classes, supports inclusion of properties defined in the class body and exclusion of
-specific properties
-from the primary constructor.
 
-Only fields and getters are included. For a property with backing field, always getter is used.
-Getters without backing fields are also supported.
+For data classes, members declared in the body are not included by default. They require
+explicit inclusion via `@ToString.Include`.
+
+Only fields and properties with backing fields are included by default.
+Getters without backing fields are also supported via `@ToString.Include`.
+
+Access is always getter-based e.g., outputs are based on getter method results, not field values.
 
 ```kotlin
 import lombokt.ToString
 
 @ToString
-data class User(val username: String, @ToString.Exclude val password: Int) {
+data class User(val username: String, @ToString.Exclude val password: String) {
   @ToString.Include(name = "emailAddress")
   var email: String? = null
 }
@@ -105,7 +107,7 @@ data class User(val username: String, @ToString.Exclude val password: Int) {
 @ToString(onlyExplicitlyIncluded = true)
 class Person(
   @ToString.Include val name: String,
-  @ToString.Include(name = "custom") private val surname: String
+  @ToString.Include(name = "lastName") private val surname: String
 ) {
 
   @ToString.Include
@@ -119,18 +121,20 @@ class Person(
 
 Works for both regular classes and data classes.
 
-Only properties with backing fields are included.
-Access is through getters by default but that can be configured as shown below.
-For data classes, only properties from the primary constructor are considered.
-For non-data classes, all properties including the ones declared in the class body are included by
-default.
+Only fields and properties with backing fields are included. Unlike `@ToString`, there is
+no way to include computed getters without backing fields. Attempting to do so fails the
+compilation.
+
+For regular classes, all such members are included by default. For data classes, only properties
+from the primary constructor are considered. `@EqualsAndHashCode.Include` on a member declared
+in data-class body fails compilation.
+
+Access is through getters by default, but that can be configured as shown below.
 
 Note that, similar to how data classes work, lomboKT just calls `equals` and `hashcode` methods on
-the property values.
-That's why arrays don't work as expected because of how these methods are defined in the `Array`
-class.
-Lombok handles this case for Java classes but lomboKT does not have such a special handling, thus
-one needs to use `List` or similar collection
+included member values. That's why arrays don't work as expected because of how these methods are
+defined in the `Array` class. Lombok handles this case for Java classes, but lomboKT does not have
+such a special handling, thus one needs to use `List` or a similar collection.
 
 ```kotlin
 import lombokt.EqualsAndHashCode
