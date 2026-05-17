@@ -16,5 +16,7 @@ class LomboktComponentRegistrar : CompilerPluginRegistrar() {
     FirExtensionRegistrarAdapter.registerExtension(LomboktFirExtensionRegistrar())
   }
 
+  override val pluginId: String get() = "com.bivektor.lombokt"
+
   override val supportsK2: Boolean get() = true
 }
