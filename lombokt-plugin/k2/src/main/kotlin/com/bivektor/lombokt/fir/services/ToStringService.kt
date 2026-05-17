@@ -35,10 +35,10 @@ class ToStringService(session: FirSession) : AnnotatedClassMatchingService(sessi
       reporter.reportOn(
         annotation.source,
         UNSUPPORTED_CLASS_TYPE,
-        "@${annotationSimpleName} is only supported on regular classes and objects, not on anonymous objects, interfaces, inline, value and enum classes.",
+        "@${annotationSimpleName}",
+        "on regular classes and objects, not on anonymous objects, interfaces, inline, value and enum classes",
         context
       )
-
       return
     }
 
@@ -46,7 +46,7 @@ class ToStringService(session: FirSession) : AnnotatedClassMatchingService(sessi
       reporter.reportOn(
         annotation.source,
         LomboktDiagnostics.FUNCTION_DECLARED_OR_NOT_OVERRIDABLE,
-        "@${annotationSimpleName} is useless on this class, because the method is already declared or final in a super class.",
+        "@${annotationSimpleName}",
         context
       )
     }

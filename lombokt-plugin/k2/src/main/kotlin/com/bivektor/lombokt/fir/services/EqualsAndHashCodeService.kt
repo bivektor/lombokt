@@ -54,10 +54,10 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
       reporter.reportOn(
         annotation.source,
         UNSUPPORTED_CLASS_TYPE,
-        "@${annotationSimpleName} is only supported on top level or nested regular classes, not on objects, interfaces, inner, inline, value and enum classes.",
+        "@${annotationSimpleName}",
+        "on top level or nested regular classes, not on objects, interfaces, inner, inline, value and enum classes",
         context
       )
-
       return
     }
 
@@ -65,7 +65,7 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
       reporter.reportOn(
         annotation.source,
         LomboktDiagnostics.FUNCTION_DECLARED_OR_NOT_OVERRIDABLE,
-        "@${annotationSimpleName} is useless on this class, because '$EQUALS_METHOD_NAME' or '$HASHCODE_METHOD_NAME' method is already declared or final in a super class.",
+        "@${annotationSimpleName}",
         context
       )
     }
@@ -79,7 +79,7 @@ class EqualsAndHashCodeService(session: FirSession) : AnnotatedClassMatchingServ
       reporter.reportOn(
         prop.source,
         LomboktDiagnostics.INVALID_EQUALITY_MEMBER,
-        "Property '${prop.name}' on class '${classSymbol.classId?.asFqNameString()}' cannot be used for equals/hashCode generation",
+        "Property '${prop.name}' on class '${classSymbol.classId.asFqNameString()}' cannot be used for equals/hashCode generation",
         context
       )
     }

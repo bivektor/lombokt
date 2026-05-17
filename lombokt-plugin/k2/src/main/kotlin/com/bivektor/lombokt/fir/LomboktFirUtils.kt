@@ -13,19 +13,21 @@ import org.jetbrains.kotlin.fir.declarations.utils.isFinal
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.expressions.FirLiteralExpression
 import org.jetbrains.kotlin.fir.resolve.toClassSymbol
+import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
-import org.jetbrains.kotlin.fir.symbols.impl.isExtension
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.StandardClassIds
 
 data class NamedFunctionDescriptor(val name: Name, val valueParameterTypes: List<ConeKotlinType>) {
-  val predicate: (FirNamedFunctionSymbol) -> Boolean = {
-    !it.isExtension &&
-      it.name == name &&
-      it.valueParameterSymbols.map { it.resolvedReturnType } == valueParameterTypes
+  @OptIn(SymbolInternals::class)
+  val predicate: (FirNamedFunctionSymbol) -> Boolean = { fn ->
+    val isExtension = fn.fir.receiverParameter != null
+    !isExtension &&
+      fn.name == name &&
+      fn.valueParameterSymbols.map { it.resolvedReturnType } == valueParameterTypes
   }
 }
 

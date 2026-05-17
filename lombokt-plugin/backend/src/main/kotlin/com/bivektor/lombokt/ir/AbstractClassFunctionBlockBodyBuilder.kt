@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetValueImpl
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 
 abstract class AbstractClassFunctionBlockBodyBuilder(
   private val irFunction: IrFunction,
@@ -26,6 +27,7 @@ abstract class AbstractClassFunctionBlockBodyBuilder(
 
   protected fun irGetThisProperty(property: IrProperty) = irGetProperty(irThis(), property)
 
+  @OptIn(UnsafeDuringIrConstructionAPI::class)
   protected fun irGetProperty(receiver: IrExpression, property: IrProperty) = property.run {
     if (isLateinit)
       irGetField(receiver, property.backingField!!)

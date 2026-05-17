@@ -21,9 +21,10 @@ lomboKT package versions include a baseline Kotlin version suffix (for example,
 the nearest published baseline in the same Kotlin minor line (for example, `-kotlin-2.2.0`) is
 expected to support that version.
 
-| lomboKT version      | Supported Kotlin versions |
-|----------------------|---------------------------|
-| `3.1.0-kotlin-2.2.0` | `2.2.0`, `2.2.10`         |
+| lomboKT version       | Supported Kotlin versions |
+|-----------------------|---------------------------|
+| `3.1.0-kotlin-2.2.0`  | `2.2.0`, `2.2.10`         |
+| `3.1.1-kotlin-2.2.20` | `2.2.20`, `2.2.21`        |
 
 ## Installation
 
