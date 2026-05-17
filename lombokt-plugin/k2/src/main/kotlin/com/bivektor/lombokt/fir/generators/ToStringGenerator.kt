@@ -5,7 +5,7 @@ import com.bivektor.lombokt.fir.services.ToStringService
 import com.bivektor.lombokt.fir.services.toStringService
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.fir.FirSession
-import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
+import org.jetbrains.kotlin.fir.declarations.FirNamedFunction
 import org.jetbrains.kotlin.fir.extensions.FirDeclarationGenerationExtension
 import org.jetbrains.kotlin.fir.extensions.MemberGenerationContext
 import org.jetbrains.kotlin.fir.plugin.createMemberFunction
@@ -47,7 +47,7 @@ open class ToStringGenerator(
 
   private fun generateToStringMethod(
     classSymbol: FirClassSymbol<*>
-  ): FirSimpleFunction = createMemberFunction(
+  ): FirNamedFunction = createMemberFunction(
     classSymbol,
     PluginKeys.ToStringKey,
     functionName,

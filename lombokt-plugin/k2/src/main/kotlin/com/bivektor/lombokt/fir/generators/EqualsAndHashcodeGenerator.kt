@@ -6,7 +6,7 @@ import com.bivektor.lombokt.fir.services.EqualsAndHashCodeService
 import com.bivektor.lombokt.fir.services.equalsAndHashCodeService
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.fir.FirSession
-import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
+import org.jetbrains.kotlin.fir.declarations.FirNamedFunction
 import org.jetbrains.kotlin.fir.extensions.FirDeclarationGenerationExtension
 import org.jetbrains.kotlin.fir.extensions.MemberGenerationContext
 import org.jetbrains.kotlin.fir.plugin.createMemberFunction
@@ -53,7 +53,7 @@ open class EqualsAndHashcodeGenerator(
 
   private fun generateEqualsMethod(
     classSymbol: FirClassSymbol<*>
-  ): FirSimpleFunction {
+  ): FirNamedFunction {
     return createMemberFunction(
       classSymbol,
       EqualsHashCodeKey,
@@ -67,7 +67,7 @@ open class EqualsAndHashcodeGenerator(
 
   private fun generateHashCodeMethod(
     classSymbol: FirClassSymbol<*>
-  ): FirSimpleFunction = createMemberFunction(
+  ): FirNamedFunction = createMemberFunction(
     classSymbol,
     EqualsHashCodeKey,
     hashCodeFunction.name,
